@@ -4,13 +4,11 @@ import { Avatar } from './ui'
 
 export function Logo({ className = '' }: { className?: string }) {
   return (
-    <Link to="/" className={`flex items-center gap-2.5 ${className}`} aria-label="Кинозал — на главную">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 ring-1 ring-accent/30">
-        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden>
-          <path d="M6 3.5v17l15-8.5z" fill="var(--color-accent)" />
-        </svg>
+    <Link to="/" className={`flex items-center gap-2 ${className}`} aria-label="Kinora — на главную">
+      <img src="/logo-mark.png" alt="" width={34} height={34} className="h-[34px] w-[34px] shrink-0" />
+      <span className="font-brand text-[22px] font-bold leading-none tracking-tight">
+        K<span className="bg-gradient-to-r from-[#5cc8ff] via-[#3d7bff] to-[#a855f7] bg-clip-text text-transparent">inora</span>
       </span>
-      <span className="font-display text-xl font-bold tracking-tight">Кинозал</span>
     </Link>
   )
 }
@@ -55,7 +53,7 @@ export function Footer() {
   return (
     <footer className="border-t border-white/5">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>Кинозал — смотрим вместе, даже когда далеко.</p>
+        <p>Kinora — смотрим вместе, даже когда далеко.</p>
         <nav className="flex gap-4" aria-label="Нижняя навигация">
           <Link to="/sources" className="hover:text-text">Источники и ограничения</Link>
           <Link to="/report" className="hover:text-text">Сообщить о нарушении</Link>

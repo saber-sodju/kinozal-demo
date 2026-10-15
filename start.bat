@@ -1,5 +1,5 @@
 @echo off
-rem Kinozal: install (first run), build and start on http://localhost:8000
+rem Kinora: install (first run), build and start on http://localhost:8000
 cd /d "%~dp0"
 
 if not exist backend\.venv (

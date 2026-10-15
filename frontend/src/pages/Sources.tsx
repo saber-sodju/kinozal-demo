@@ -22,7 +22,7 @@ export function SourcesPage() {
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <h1 className="font-display text-4xl font-bold">Источники</h1>
       <p className="mt-3 max-w-2xl text-muted">
-        Мы не храним и не пересылаем видео — каждый зритель смотрит его напрямую с источника, а Кинозал синхронизирует плееры. Поэтому работает только то, что источник разрешает встраивать.
+        Мы не храним и не пересылаем видео — каждый зритель смотрит его напрямую с источника, а Kinora синхронизирует плееры. Поэтому работает только то, что источник разрешает встраивать.
       </p>
 
       <section className="mt-8 rounded-2xl border border-white/5 bg-surface p-6">

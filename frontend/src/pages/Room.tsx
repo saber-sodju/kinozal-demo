@@ -449,7 +449,7 @@ function InviteModal({ slug, onClose }: { slug: string; onClose: () => void }) {
         <Button onClick={copy} className="shrink-0">{copied ? <><CheckIcon size={16} /> Готово</> : <><LinkIcon size={16} /> Копировать</>}</Button>
       </div>
       {'share' in navigator && (
-        <Button variant="secondary" className="mt-3 w-full" onClick={() => navigator.share({ title: 'Кинозал', text: 'Смотрим вместе!', url: link }).catch(() => {})}>
+        <Button variant="secondary" className="mt-3 w-full" onClick={() => navigator.share({ title: 'Kinora', text: 'Смотрим вместе!', url: link }).catch(() => {})}>
           Поделиться…
         </Button>
       )}

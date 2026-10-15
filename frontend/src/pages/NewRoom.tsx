@@ -115,7 +115,7 @@ export function NewRoomPage() {
             </div>
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium">Название комнаты</span>
-              <input value={roomName} onChange={(e) => setRoomName(e.target.value)} maxLength={60} placeholder={pickedTitle ?? `Кинозал ${session.name}`} className={inputClass} />
+              <input value={roomName} onChange={(e) => setRoomName(e.target.value)} maxLength={60} placeholder={pickedTitle ?? `Комната ${session.name}`} className={inputClass} />
             </label>
             <fieldset>
               <legend className="mb-2 text-sm font-medium">Кто управляет просмотром</legend>

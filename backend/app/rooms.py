@@ -632,5 +632,5 @@ def create_room_with_media(media: dict, name: str, host_session_id: str = "tg-bo
     """Комната, созданная не из браузера (например, ботом): ведущим станет первый вошедший."""
     slug = new_slug()
     media = {**media, "capabilities": capabilities_for(media["source"])}
-    db.create_room(slug, name or "Кинозал", "everyone", host_session_id, {"playback": {"media": media, "position": 0}, "queue": []})
+    db.create_room(slug, name or "Kinora", "everyone", host_session_id, {"playback": {"media": media, "position": 0}, "queue": []})
     return slug

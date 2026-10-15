@@ -1,4 +1,4 @@
-"""HTTP API + WebSocket сервер «Кинозала».
+"""HTTP API + WebSocket сервер Kinora.
 
 Разработка:  .venv/Scripts/python -m uvicorn app.main:app --reload --port 8000
 Продакшен:   собрать фронтенд (npm run build) — сервер сам отдаст frontend/dist.
@@ -53,7 +53,7 @@ async def lifespan(_: FastAPI):
         room.save()
 
 
-app = FastAPI(title="Кинозал", lifespan=lifespan)
+app = FastAPI(title="Kinora", lifespan=lifespan)
 
 
 # ---------- простой лимит запросов по IP ----------
@@ -177,7 +177,7 @@ async def create_room(body: RoomIn, request: Request, authorization: str | None 
         media["capabilities"] = capabilities_for(media["source"])
 
     slug = new_slug()
-    name = body.name.strip() or f"Кинозал {session['name']}"
+    name = body.name.strip() or f"Комната {session['name']}"
     mode = body.control_mode if body.control_mode in ("everyone", "host_only") else "everyone"
     db.create_room(slug, name, mode, session["id"], {"playback": {"media": media, "position": 0}, "queue": []})
     return {"slug": slug}

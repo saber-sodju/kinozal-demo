@@ -71,7 +71,7 @@ export function LinkChecker({ onResolved, compact = false }: { onResolved?: (url
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=… или ссылка на .mp4"
+          placeholder="Ссылка на YouTube, VK, Telegram, Vimeo или .mp4"
           className={inputClass}
           aria-label="Ссылка на видео"
         />
@@ -168,7 +168,7 @@ export function MediaPicker({ value, onChange }: { value: Pick; onChange: (p: Pi
         <div className="space-y-3">
           <LinkChecker onResolved={(url, media) => onChange(media ? { kind: 'url', url, media } : null)} />
           <p className="text-xs text-muted">
-            Подходят YouTube, Vimeo, Internet Archive и прямые ссылки на <Badge>.mp4</Badge> <Badge>.webm</Badge> <Badge>.m3u8</Badge>
+            Подходят YouTube, VK Видео, Telegram (публичные каналы), Vimeo, Internet Archive и прямые ссылки на <Badge>.mp4</Badge> <Badge>.webm</Badge> <Badge>.m3u8</Badge>
           </p>
         </div>
       )}

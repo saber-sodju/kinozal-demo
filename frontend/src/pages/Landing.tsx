@@ -4,7 +4,7 @@ import { PosterCard } from '../components/PosterCard'
 import { ChatIcon, HeadphonesIcon, LinkIcon, PlayIcon } from '../components/Icons'
 
 const STEPS = [
-  { icon: LinkIcon, title: 'Создай комнату', text: 'Выбери фильм из каталога или вставь ссылку на YouTube, Vimeo, Internet Archive.' },
+  { icon: LinkIcon, title: 'Создай комнату', text: 'Выбери фильм из каталога или вставь ссылку на YouTube, VK Видео, Telegram или Vimeo.' },
   { icon: ChatIcon, title: 'Отправь ссылку друзьям', text: 'Без регистрации и расширений: открыл ссылку, ввёл имя — и ты в зале.' },
   { icon: HeadphonesIcon, title: 'Смотрите вместе', text: 'Видео идёт синхронно у всех, а голос и чат — прямо поверх фильма.' },
 ]
@@ -132,6 +132,8 @@ export function LandingPage() {
           <ul className="grid gap-3 sm:grid-cols-2">
             {[
               ['YouTube', 'Любое видео, где разрешено встраивание'],
+              ['VK Видео', 'Фильмы и ролики из открытого доступа'],
+              ['Telegram', 'Видео из публичных каналов и групп'],
               ['Internet Archive', 'Тысячи классических фильмов'],
               ['Vimeo', 'Инди-кино и короткий метр'],
               ['Ссылка на файл', '.mp4, .webm и HLS-потоки'],

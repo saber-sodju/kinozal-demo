@@ -1,4 +1,4 @@
-export type SourceId = 'youtube' | 'archive' | 'vimeo' | 'direct'
+export type SourceId = 'youtube' | 'vk' | 'telegram' | 'archive' | 'vimeo' | 'direct'
 
 export interface Capabilities {
   can_seek: boolean
@@ -15,6 +15,7 @@ export interface Media {
   subtitle?: string | null
   poster_url?: string | null
   duration_s?: number | null
+  page_url?: string | null
   catalog_id?: number
   capabilities?: Capabilities
   qid?: string

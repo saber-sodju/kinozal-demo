@@ -176,6 +176,13 @@ export class SyncController extends Emitter {
         this.report('error')
         this.emit('error', e.message)
         break
+      case 'ad':
+        this.report('ad')
+        break
+      case 'blocked':
+        this.unlocked = false
+        this.emit('blocked')
+        break
     }
   }
 

@@ -13,7 +13,7 @@ export function CatalogPage() {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <h1 className="font-display text-4xl font-bold">Каталог</h1>
       <p className="mt-2 max-w-2xl text-muted">
-        Фильмы из Internet Archive с открытой лицензией. Хочешь что-то другое — вставь ссылку на YouTube или Vimeo при создании комнаты.
+        Фильмы из Internet Archive с открытой лицензией. Хочешь что-то другое — вставь ссылку на YouTube, VK Видео, Telegram или Vimeo при создании комнаты.
       </p>
 
       <div className="mt-8 flex flex-col gap-4">

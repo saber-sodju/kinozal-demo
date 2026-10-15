@@ -19,8 +19,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
+from html import unescape
 
 USER_AGENT = "kinozal/1.0 (+watch-party)"
+# VK и Telegram отдают полную страницу встраивания только «обычному» браузеру.
+BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36"
 
 
 class ResolveError(Exception):
@@ -46,8 +49,8 @@ class SourceInfo:
 
 # ---------- HTTP-помощники (stdlib, в отдельном потоке) ----------
 
-def _fetch(url: str, method: str = "GET", timeout: float = 10) -> tuple[int, dict, bytes]:
-    req = urllib.request.Request(url, method=method, headers={"User-Agent": USER_AGENT})
+def _fetch(url: str, method: str = "GET", timeout: float = 10, ua: str = USER_AGENT) -> tuple[int, dict, bytes]:
+    req = urllib.request.Request(url, method=method, headers={"User-Agent": ua, "Accept-Language": "ru,en;q=0.8"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             body = resp.read(2_000_000) if method == "GET" else b""
@@ -56,11 +59,19 @@ def _fetch(url: str, method: str = "GET", timeout: float = 10) -> tuple[int, dic
         return exc.code, dict(exc.headers or {}), b""
 
 
-async def fetch(url: str, method: str = "GET") -> tuple[int, dict, bytes]:
+async def fetch(url: str, method: str = "GET", ua: str = USER_AGENT) -> tuple[int, dict, bytes]:
     try:
-        return await asyncio.to_thread(_fetch, url, method)
+        return await asyncio.to_thread(_fetch, url, method, 10, ua)
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise ResolveError("Источник не отвечает. Попробуй позже.") from exc
+
+
+async def fetch_page(url: str) -> tuple[int, str]:
+    """HTML-страница в виде текста с учётом кодировки (VK до сих пор отдаёт windows-1251)."""
+    status, headers, body = await fetch(url, ua=BROWSER_UA)
+    ctype = {k.lower(): v for k, v in headers.items()}.get("content-type", "")
+    encoding = "cp1251" if "1251" in ctype else "utf-8"
+    return status, body.decode(encoding, "replace")
 
 
 async def fetch_json(url: str) -> tuple[int, dict]:
@@ -171,6 +182,141 @@ class VimeoAdapter:
             "subtitle": data.get("author_name"),
             "poster_url": data.get("thumbnail_url"),
             "duration_s": data.get("duration"),
+        }
+
+
+# ---------- VK Видео ----------
+
+VK_HOST = r"(?:https?://)?(?:[\w-]+\.)?(?:vk\.com|vk\.ru|vkvideo\.ru)/"
+VK_VIDEO = re.compile(VK_HOST + r".*?(?:video|clip)(-?\d+)_(\d+)")
+VK_EXT = re.compile(VK_HOST + r"video_ext\.php\?\S+")
+
+
+def _json_str(raw: str) -> str:
+    try:
+        return json.loads(f'"{raw}"')
+    except ValueError:
+        return raw
+
+
+class VKAdapter:
+    info = SourceInfo(
+        id="vk",
+        name="VK Видео",
+        examples=["https://vkvideo.ru/video-22822305_456241864", "https://vk.com/video-22822305_456241864"],
+        capabilities=Capabilities(can_set_rate=False, may_have_ads=True),
+        notes=[
+            "Работает через официальный плеер VK с управлением из кода.",
+            "Видео должно быть доступно всем: закрытые, из закрытых групп и с запретом встраивания не подойдут.",
+            "VK может показывать рекламу — у каждого свою, после неё плеер догонит остальных.",
+        ],
+    )
+
+    def match(self, url: str) -> bool:
+        return bool(VK_VIDEO.search(url) or VK_EXT.search(url))
+
+    @staticmethod
+    def _ids(url: str) -> tuple[str, str, str | None]:
+        parsed = urllib.parse.urlparse(url if "://" in url else "https://" + url)
+        query = urllib.parse.parse_qs(parsed.query)
+        if parsed.path.endswith("video_ext.php"):
+            oid, vid = query.get("oid", [""])[0], query.get("id", [""])[0]
+            if not (re.fullmatch(r"-?\d+", oid) and vid.isdigit()):
+                raise ResolveError("В ссылке на плеер VK нет oid или id видео.")
+            return oid, vid, query.get("hash", [None])[0]
+        m = VK_VIDEO.search(urllib.parse.unquote(url))
+        return m.group(1), m.group(2), None
+
+    async def resolve(self, url: str) -> dict:
+        oid, vid, hash_ = self._ids(url)
+        embed = f"https://vk.com/video_ext.php?oid={oid}&id={vid}" + (f"&hash={hash_}" if hash_ else "")
+        status, html = await fetch_page(embed)
+        if status != 200:
+            raise ResolveError("VK не ответил. Попробуй позже.")
+        err = re.search(r"video_ext_msg[^>]*>(.*?)</div>", html, re.S)
+        if err:
+            text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", err.group(1))).strip()
+            raise ResolveError(f"VK: {text}" if text else "Видео VK недоступно.")
+
+        meta = re.search(
+            r'"id":%s,"owner_id":%s,(?:"[a-z_]+":"[^"]*",)*?"title":"((?:[^"\\]|\\.)*)"' % (vid, oid), html
+        )
+        title = _json_str(meta.group(1)) if meta else "Видео VK"
+        player = re.search(r'"player":"(https:\\/\\/vk\.com\\/video_ext\.php[^"]+)"', html)
+        player_url = _json_str(player.group(1)) if player else embed
+        duration = re.search(r'"duration":(\d+)', html)
+        previews = re.findall(r'"url":"(https:[^"]*getVideoPreview[^"]*)","width":(\d+)', html)
+        poster = _json_str(min(previews, key=lambda p: abs(int(p[1]) - 800))[0]) if previews else None
+        return {
+            "source": "vk",
+            "external_id": f"{oid}_{vid}",
+            "url": player_url,
+            "page_url": f"https://vkvideo.ru/video{oid}_{vid}",
+            "title": unescape(title),
+            "subtitle": None,
+            "poster_url": poster,
+            "duration_s": int(duration.group(1)) if duration else None,
+        }
+
+
+# ---------- Telegram (публичные каналы и группы) ----------
+
+TG_POST = re.compile(r"(?:https?://)?(?:t\.me|telegram\.me|telegram\.dog)/(?:s/)?([A-Za-z][A-Za-z0-9_]{3,})/(\d+)")
+TG_PRIVATE = re.compile(r"(?:t\.me|telegram\.me)/c/\d+")
+
+
+class TelegramAdapter:
+    info = SourceInfo(
+        id="telegram",
+        name="Telegram",
+        examples=["https://t.me/telegram/459"],
+        capabilities=Capabilities(),
+        notes=[
+            "Только посты из публичных каналов и групп (ссылка вида t.me/канал/123).",
+            "Видео играет напрямую с серверов Telegram — полная синхронизация, без рекламы.",
+            "Очень большие файлы Telegram не отдаёт в браузер — их можно посмотреть только в приложении.",
+        ],
+    )
+
+    def match(self, url: str) -> bool:
+        return bool(TG_POST.search(url) or TG_PRIVATE.search(url))
+
+    async def resolve(self, url: str) -> dict:
+        m = TG_POST.search(url)
+        if TG_PRIVATE.search(url) or not m:
+            raise ResolveError("Это ссылка на закрытый канал или чат. Подходят только публичные каналы и группы.")
+        channel, post = m.group(1), m.group(2)
+        status, html = await fetch_page(f"https://t.me/{channel}/{post}?embed=1&mode=tme")
+        if status != 200:
+            raise ResolveError("Telegram не ответил. Попробуй позже.")
+        if "tgme_widget_message_bubble" not in html or "tgme_widget_message_error" in html:
+            raise ResolveError("Пост не найден. Проверь ссылку — канал должен быть публичным.")
+        video = re.search(r'<video[^>]+src="([^"]+)"', html)
+        if not video:
+            if "message_media_not_supported" in html:
+                raise ResolveError(
+                    "Telegram не показывает это вложение в браузере: это не видео или слишком большой файл. "
+                    "Такое можно посмотреть только в приложении Telegram."
+                )
+            raise ResolveError("В этом посте нет видео.")
+        owner = re.search(r'tgme_widget_message_owner_name"[^>]*>(?:<span[^>]*>)?([^<]+)', html)
+        owner_name = unescape(owner.group(1)).strip() if owner else channel
+        text = re.search(r"tgme_widget_message_text[^>]*>(.*?)</div>", html, re.S)
+        caption = ""
+        if text:
+            caption = re.sub(r"<br\s*/?>", " ", text.group(1))
+            caption = re.sub(r"\s+", " ", unescape(re.sub(r"<[^>]+>", "", caption))).strip()
+        title = caption[:90].rsplit(" ", 1)[0] + "…" if len(caption) > 90 else caption
+        thumb = re.search(r"tgme_widget_message_video_thumb\"[^>]*background-image:url\('([^']+)'\)", html)
+        return {
+            "source": "telegram",
+            "external_id": f"{channel}/{post}",
+            "url": unescape(video.group(1)),
+            "page_url": f"https://t.me/{channel}/{post}",
+            "title": title or f"Видео из «{owner_name}»",
+            "subtitle": owner_name,
+            "poster_url": unescape(thumb.group(1)) if thumb else None,
+            "duration_s": None,
         }
 
 
@@ -308,7 +454,7 @@ class DirectAdapter:
         }
 
 
-ADAPTERS = [YouTubeAdapter(), VimeoAdapter(), ArchiveAdapter(), DirectAdapter()]
+ADAPTERS = [YouTubeAdapter(), VKAdapter(), TelegramAdapter(), VimeoAdapter(), ArchiveAdapter(), DirectAdapter()]
 
 
 def source_infos() -> list[dict]:
@@ -336,5 +482,6 @@ async def resolve_url(url: str) -> dict:
         if adapter.match(url):
             return await adapter.resolve(url)
     raise ResolveError(
-        "Этот сайт не поддерживается. Подходят YouTube, Vimeo, Internet Archive и прямые ссылки на .mp4/.webm/.m3u8."
+        "Этот сайт не поддерживается. Подходят YouTube, VK Видео, Telegram (публичные каналы), Vimeo, "
+        "Internet Archive и прямые ссылки на .mp4/.webm/.m3u8."
     )

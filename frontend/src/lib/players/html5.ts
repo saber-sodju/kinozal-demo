@@ -1,4 +1,5 @@
 import type Hls from 'hls.js'
+import { api } from '../api'
 import type { Media } from '../types'
 import type { PlayerAdapter, PlayerEvent } from './types'
 
@@ -8,6 +9,7 @@ export class Html5Player implements PlayerAdapter {
   private video: HTMLVideoElement | null = null
   private hls: Hls | null = null
   private listeners: ((e: PlayerEvent) => void)[] = []
+  private refreshed = false
 
   onEvent(cb: (e: PlayerEvent) => void): void {
     this.listeners.push(cb)
@@ -36,6 +38,12 @@ export class Html5Player implements PlayerAdapter {
       if (Number.isFinite(video.duration)) this.emit({ type: 'duration', duration: video.duration })
     })
     video.addEventListener('error', () => {
+      // Ссылки Telegram временные: при ошибке один раз берём свежую и продолжаем с того же места.
+      if (media.source === 'telegram' && media.page_url && !this.refreshed) {
+        this.refreshed = true
+        void this.refresh(media.page_url)
+        return
+      }
       const code = video.error?.code
       this.emit({
         type: 'error',
@@ -62,6 +70,20 @@ export class Html5Player implements PlayerAdapter {
       this.hls = hls
     } else {
       video.src = media.url
+    }
+  }
+
+  private async refresh(pageUrl: string): Promise<void> {
+    const video = this.video
+    if (!video) return
+    const at = video.currentTime
+    try {
+      const r = await api<{ ok: boolean; media?: Media; reason?: string }>('/api/media/resolve', { body: { url: pageUrl } })
+      if (!r.ok || !r.media || this.video !== video) throw new Error(r.reason)
+      video.src = r.media.url
+      video.currentTime = at
+    } catch (err) {
+      this.emit({ type: 'error', message: (err as Error).message || 'Не удалось обновить ссылку на видео Telegram.' })
     }
   }
 

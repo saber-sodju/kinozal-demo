@@ -8,6 +8,8 @@ export type PlayerEvent =
   | { type: 'ended' }
   | { type: 'duration'; duration: number }
   | { type: 'error'; message: string }
+  | { type: 'ad' }
+  | { type: 'blocked' }
 
 /**
  * Единый интерфейс для всех источников. Синхронизация работает только через него,

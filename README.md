@@ -33,6 +33,8 @@ npm run dev        # http://localhost:5173
 - **Источники**:
   - каталог из 31 фильма Internet Archive;
   - YouTube;
+  - VK Видео (официальный плеер с JS API);
+  - Telegram (посты публичных каналов и групп);
   - Vimeo;
   - прямые ссылки `.mp4`, `.webm`, `.m3u8`;
   - проверка ссылки до запуска.
@@ -48,7 +50,7 @@ npm run dev        # http://localhost:5173
 
 ```
 frontend/  React + Vite + TypeScript + Tailwind
-  src/lib/players/   адаптеры плееров (YouTube, Vimeo, HTML5/HLS) — единый интерфейс
+  src/lib/players/   адаптеры плееров (YouTube, VK, Vimeo, HTML5/HLS) — единый интерфейс
   src/lib/sync.ts    синхронизация: часы сервера, коррекция дрейфа (скорость/seek)
   src/lib/voice.ts   голос: WebRTC mesh, сигналинг через WebSocket
   src/room/          экран комнаты

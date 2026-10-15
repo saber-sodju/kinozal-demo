@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0b0f;
+  --color-surface: #14141b;
+  --color-surface-2: #1c1c26;
+  --color-surface-3: #262632;
+  --color-line: #2a2a36;
+  --color-text: #f2f2f5;
+  --color-muted: #a0a0b0;
+  --color-faint: #6c6c7c;
+  --color-accent: #f5b544;
+  --color-accent-strong: #ffc65c;
+  --color-accent-ink: #1a1206;
+  --color-danger: #ff6b6f;
+  --color-ok: #5bd69a;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html {
+  color-scheme: dark;
+  background: var(--color-bg);
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+/* Тонкие тёмные скроллбары */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-3) transparent;
+}
+
+/* Ползунки (перемотка, громкость) */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 18px;
+}
+input[type="range"].slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--color-accent) var(--fill, 0%), rgba(255, 255, 255, 0.18) var(--fill, 0%));
+}
+input[type="range"].slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+input[type="range"].slider::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-accent);
+}
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(245, 181, 68, 0.25);
+}
+input[type="range"].slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* Всплывающие реакции */
+@keyframes float-up {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  12% { transform: translate(0, -20px) scale(1.15); opacity: 1; }
+  100% { transform: translate(var(--drift, 0px), -260px) scale(1); opacity: 0; }
+}
+.reaction-float {
+  animation: float-up 2.6s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.fade-in {
+  animation: fade-in 0.25s ease-out both;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 2px var(--color-accent), 0 0 12px 2px rgba(245, 181, 68, 0.45); }
+  50% { box-shadow: 0 0 0 3px var(--color-accent), 0 0 18px 4px rgba(245, 181, 68, 0.6); }
+}
+.speaking {
+  animation: pulse-ring 0.9s ease-in-out infinite;
+}
+
+.film-grain {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245, 181, 68, 0.14), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 85% 30%, rgba(255, 122, 107, 0.08), transparent 70%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reaction-float { animation-duration: 0.01s; }
+  .speaking { animation: none; box-shadow: 0 0 0 2px var(--color-accent); }
+  .fade-in { animation: none; }
+}

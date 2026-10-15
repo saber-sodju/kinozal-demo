@@ -19,7 +19,7 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 export function Header() {
   const session = useSession()
   return (
-    <header className="sticky top-0 z-40 border-b border-white/5 bg-bg/80 backdrop-blur-xl">
+    <header className="glass sticky top-0 z-40 border-b border-white/[0.06]">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:px-6">
         <Logo />
         <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Основная навигация">
@@ -30,7 +30,7 @@ export function Header() {
           <NavLink to="/catalog" className={(s) => `${navClass(s)} md:hidden`}>Каталог</NavLink>
           <Link
             to="/new"
-            className="hidden h-10 items-center rounded-xl bg-accent px-4 text-sm font-semibold text-accent-ink transition-colors hover:bg-accent-strong sm:inline-flex"
+            className="btn-press btn-sheen glow-brand bg-brand hidden h-10 items-center rounded-xl px-4 text-sm font-semibold text-white hover:brightness-110 sm:inline-flex"
           >
             Создать комнату
           </Link>

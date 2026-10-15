@@ -9,13 +9,13 @@ export function Modal({ title, onClose, children, wide = false }: { title: strin
   }, [onClose])
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={onClose}>
+    <div className="fade-in fixed inset-0 z-[90] flex items-end justify-center bg-[#03030a]/75 p-0 backdrop-blur-md sm:items-center sm:p-4" onMouseDown={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
         onMouseDown={(e) => e.stopPropagation()}
-        className={`fade-in max-h-[92dvh] w-full overflow-y-auto rounded-t-2xl border border-white/10 bg-surface p-6 shadow-2xl sm:rounded-2xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-md'}`}
+        className={`pop-in max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-white/10 bg-surface/95 p-6 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:rounded-3xl ${wide ? 'sm:max-w-3xl' : 'sm:max-w-md'}`}
       >
         <div className="mb-5 flex items-center justify-between gap-4">
           <h2 className="font-display text-xl font-bold">{title}</h2>

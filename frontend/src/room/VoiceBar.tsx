@@ -84,7 +84,7 @@ export function VoiceBar({
       </div>
 
       {onInvite && !compact && (
-        <button onClick={onInvite} className="ml-auto inline-flex h-10 items-center gap-2 rounded-xl bg-accent/12 px-3.5 text-sm font-semibold text-accent hover:bg-accent/20">
+        <button onClick={onInvite} className="btn-press btn-sheen glow-brand bg-brand ml-auto inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-white">
           <LinkIcon size={17} /> Пригласить
         </button>
       )}

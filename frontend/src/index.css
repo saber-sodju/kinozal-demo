@@ -1,22 +1,48 @@
 @import "tailwindcss";
 
+/* Kinora — тёмная кинотема в цветах логотипа: голубой → синий → фиолетовый */
 @theme {
-  --color-bg: #0b0b0f;
-  --color-surface: #14141b;
-  --color-surface-2: #1c1c26;
-  --color-surface-3: #262632;
-  --color-line: #2a2a36;
-  --color-text: #f2f2f5;
-  --color-muted: #a0a0b0;
-  --color-faint: #6c6c7c;
-  --color-accent: #f5b544;
-  --color-accent-strong: #ffc65c;
-  --color-accent-ink: #1a1206;
-  --color-danger: #ff6b6f;
-  --color-ok: #5bd69a;
-  --font-display: "Fraunces", Georgia, serif;
+  --color-bg: #07070f;
+  --color-surface: #0e0f1c;
+  --color-surface-2: #151729;
+  --color-surface-3: #1e2138;
+  --color-line: #262a44;
+  --color-text: #f3f4fa;
+  --color-muted: #a3a7c2;
+  --color-faint: #6f7495;
+  /* Акцент для текста, ссылок и индикаторов (контраст на фоне ≥ 6:1) */
+  --color-accent: #7c9bff;
+  --color-accent-strong: #a5b8ff;
+  --color-accent-ink: #ffffff;
+  --color-cyan: #38c8ff;
+  --color-blue: #3d6bff;
+  --color-violet: #a855f7;
+  --color-danger: #ff6b7a;
+  --color-ok: #4ade9b;
+  --font-display: "Manrope", "Inter", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-brand: "Outfit", "Inter", system-ui, sans-serif;
+  --font-brand: "Outfit", "Manrope", system-ui, sans-serif;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Градиент бренда для кнопок (тёмные стопы — белый текст читается, контраст ≥ 4.5:1) */
+@utility bg-brand {
+  background-image: linear-gradient(120deg, #1d6fe8 0%, #3b55f0 45%, #7c3aed 100%);
+}
+/* Светлый градиент для крупных заголовков и иконок */
+@utility text-gradient {
+  background-image: linear-gradient(95deg, #5cc8ff 0%, #6e8bff 45%, #b77bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility bg-gradient-soft {
+  background-image: linear-gradient(135deg, rgba(56, 200, 255, 0.16), rgba(61, 107, 255, 0.12) 45%, rgba(168, 85, 247, 0.16));
+}
+@utility glass {
+  background-color: rgba(14, 15, 28, 0.62);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
 }
 
 html {
@@ -26,10 +52,15 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-bg);
+  /* фон только у html — иначе он перекроет световые пятна (.ambient, z-index: -1) */
+  background: transparent;
   color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.02em;
 }
 
 :focus-visible {
@@ -39,16 +70,53 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  background: rgba(110, 139, 255, 0.4);
 }
 
-/* Тонкие тёмные скроллбары */
+button, a, [role="button"], summary, label[for] {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-surface-3) transparent;
 }
 
-/* Ползунки (перемотка, громкость) */
+/* ---------- Кнопки: блик при наведении и мягкое нажатие ---------- */
+.btn-press {
+  transition: transform 0.2s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo), filter 0.2s, background-color 0.2s;
+}
+.btn-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--ease-out-expo);
+}
+.btn-sheen:hover::after {
+  transform: translateX(120%);
+}
+.glow-brand {
+  box-shadow: 0 10px 34px -10px rgba(61, 107, 255, 0.75), 0 4px 18px -6px rgba(168, 85, 247, 0.5);
+}
+.glow-brand:hover {
+  box-shadow: 0 14px 44px -10px rgba(61, 107, 255, 0.9), 0 6px 24px -6px rgba(168, 85, 247, 0.65);
+}
+
+/* ---------- Ползунки (перемотка, громкость) ---------- */
 input[type="range"].slider {
   -webkit-appearance: none;
   appearance: none;
@@ -59,7 +127,9 @@ input[type="range"].slider {
 input[type="range"].slider::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 999px;
-  background: linear-gradient(to right, var(--color-accent) var(--fill, 0%), rgba(255, 255, 255, 0.18) var(--fill, 0%));
+  background:
+    linear-gradient(90deg, #38c8ff, #6e8bff, #a855f7) 0 0 / var(--fill, 0%) 100% no-repeat,
+    rgba(255, 255, 255, 0.18);
 }
 input[type="range"].slider::-moz-range-track {
   height: 4px;
@@ -69,7 +139,7 @@ input[type="range"].slider::-moz-range-track {
 input[type="range"].slider::-moz-range-progress {
   height: 4px;
   border-radius: 999px;
-  background: var(--color-accent);
+  background: linear-gradient(90deg, #38c8ff, #6e8bff, #a855f7);
 }
 input[type="range"].slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -78,7 +148,11 @@ input[type="range"].slider::-webkit-slider-thumb {
   margin-top: -5px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 0 4px rgba(245, 181, 68, 0.25);
+  box-shadow: 0 0 0 4px rgba(110, 139, 255, 0.3);
+  transition: transform 0.15s;
+}
+input[type="range"].slider:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
 }
 input[type="range"].slider::-moz-range-thumb {
   width: 14px;
@@ -88,40 +162,168 @@ input[type="range"].slider::-moz-range-thumb {
   background: #fff;
 }
 
-/* Всплывающие реакции */
+/* ---------- Фон: медленно плывущие пятна света в цветах логотипа ---------- */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(ellipse 120% 80% at 50% -10%, #0d0f24 0%, var(--color-bg) 60%);
+}
+.ambient span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.38;
+  will-change: transform;
+}
+.ambient .b1 {
+  width: 46vw; height: 46vw; left: -8vw; top: -14vw;
+  background: #1e8bff;
+  animation: drift-a 24s ease-in-out infinite alternate;
+}
+.ambient .b2 {
+  width: 40vw; height: 40vw; right: -10vw; top: 6vh;
+  background: #7c3aed;
+  animation: drift-b 28s ease-in-out infinite alternate;
+}
+.ambient .b3 {
+  width: 34vw; height: 34vw; left: 30vw; top: 55vh;
+  background: #3d6bff;
+  opacity: 0.22;
+  animation: drift-c 32s ease-in-out infinite alternate;
+}
+@keyframes drift-a {
+  to { transform: translate(14vw, 10vh) scale(1.15); }
+}
+@keyframes drift-b {
+  to { transform: translate(-12vw, 16vh) scale(0.9); }
+}
+@keyframes drift-c {
+  to { transform: translate(-16vw, -20vh) scale(1.2); }
+}
+
+/* ---------- Вращающаяся градиентная рамка ---------- */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.ring-spin {
+  position: relative;
+  isolation: isolate;
+}
+.ring-spin::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(from var(--angle), #38c8ff, #3d6bff, #a855f7, #38c8ff 60%, transparent 70%, #38c8ff);
+  animation: spin-angle 6s linear infinite;
+}
+@keyframes spin-angle {
+  to { --angle: 360deg; }
+}
+
+/* ---------- Бегущая лента постеров ---------- */
+.marquee {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 60s linear infinite;
+}
+.marquee-track.reverse {
+  animation-direction: reverse;
+  animation-duration: 70s;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* ---------- Появление при прокрутке ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px) scale(0.985);
+  transition: opacity 0.7s var(--ease-out-expo), transform 0.7s var(--ease-out-expo);
+  transition-delay: var(--delay, 0ms);
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Мелкая анимация ---------- */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+.float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
 @keyframes float-up {
   0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
   12% { transform: translate(0, -20px) scale(1.15); opacity: 1; }
   100% { transform: translate(var(--drift, 0px), -260px) scale(1); opacity: 0; }
 }
 .reaction-float {
-  animation: float-up 2.6s ease-out forwards;
+  animation: float-up 2.6s var(--ease-out-expo) forwards;
 }
 
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 .fade-in {
-  animation: fade-in 0.25s ease-out both;
+  animation: fade-in 0.35s var(--ease-out-expo) both;
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.pop-in {
+  animation: pop-in 0.4s var(--ease-out-expo) both;
 }
 
 @keyframes pulse-ring {
-  0%, 100% { box-shadow: 0 0 0 2px var(--color-accent), 0 0 12px 2px rgba(245, 181, 68, 0.45); }
-  50% { box-shadow: 0 0 0 3px var(--color-accent), 0 0 18px 4px rgba(245, 181, 68, 0.6); }
+  0%, 100% { box-shadow: 0 0 0 2px #5c9dff, 0 0 14px 2px rgba(56, 200, 255, 0.45); }
+  50% { box-shadow: 0 0 0 3px #9b6bff, 0 0 22px 5px rgba(168, 85, 247, 0.55); }
 }
 .speaking {
-  animation: pulse-ring 0.9s ease-in-out infinite;
+  animation: pulse-ring 1s ease-in-out infinite;
 }
 
+@keyframes live-dot {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 155, 0.6); }
+  100% { box-shadow: 0 0 0 8px rgba(74, 222, 155, 0); }
+}
+.live-dot {
+  animation: live-dot 1.6s ease-out infinite;
+}
+
+/* Мягкое свечение сверху секций */
 .film-grain {
   background-image:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245, 181, 68, 0.14), transparent 70%),
-    radial-gradient(ellipse 60% 50% at 85% 30%, rgba(255, 122, 107, 0.08), transparent 70%);
+    radial-gradient(ellipse 70% 55% at 50% 0%, rgba(61, 107, 255, 0.18), transparent 70%),
+    radial-gradient(ellipse 50% 45% at 85% 20%, rgba(168, 85, 247, 0.14), transparent 70%);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .ambient span, .marquee-track, .float, .float-slow, .ring-spin::before, .live-dot { animation: none; }
   .reaction-float { animation-duration: 0.01s; }
-  .speaking { animation: none; box-shadow: 0 0 0 2px var(--color-accent); }
-  .fade-in { animation: none; }
+  .speaking { animation: none; box-shadow: 0 0 0 2px #6e8bff; }
+  .fade-in, .pop-in { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .btn-sheen::after { display: none; }
 }

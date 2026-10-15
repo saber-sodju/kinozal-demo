@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Outlet, Route, Routes } from 'react-router'
+import { BrowserRouter, Outlet, Route, Routes, useLocation } from 'react-router'
 import { Footer, Header } from './components/Header'
+import { Ambient } from './components/Motion'
 import { ToastProvider } from './components/Toasts'
 import './index.css'
 import { CatalogPage } from './pages/Catalog'
@@ -16,10 +17,13 @@ import { SourcesPage } from './pages/Sources'
 import { TgLinkPage } from './pages/TgLink'
 
 function Layout() {
+  const location = useLocation()
   return (
     <div className="flex min-h-dvh flex-col">
+      <Ambient />
       <Header />
-      <main className="flex-1">
+      {/* key — плавное появление при переходе между страницами */}
+      <main key={location.pathname} className="fade-in flex-1">
         <Outlet />
       </main>
       <Footer />

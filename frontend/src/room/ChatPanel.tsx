@@ -56,7 +56,7 @@ export function ChatPanel({
           const grouped = prev && prev.kind === 'text' && prev.author_id === m.author_id && m.created_at - prev.created_at < 120000
           const mine = m.author_id === you
           return (
-            <div key={m.id} className={`flex gap-2.5 ${grouped ? '' : 'pt-2'}`}>
+            <div key={m.id} className={`fade-in flex gap-2.5 ${grouped ? '' : 'pt-2'}`}>
               <div className="w-8 shrink-0">{!grouped && <Avatar name={m.author_name ?? '?'} color={m.author_color ?? '#888'} size={32} />}</div>
               <div className="min-w-0 flex-1">
                 {!grouped && (
@@ -82,7 +82,7 @@ export function ChatPanel({
           maxLength={500}
           placeholder="Написать в чат…"
           aria-label="Сообщение"
-          className="h-11 w-full rounded-xl border border-line bg-surface-2 px-3.5 text-sm outline-none placeholder:text-faint focus:border-accent/60"
+          className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 text-sm outline-none transition placeholder:text-faint focus:border-accent/60 focus:ring-4 focus:ring-accent/15"
         />
       </form>
     </div>

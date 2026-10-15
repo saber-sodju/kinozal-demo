@@ -36,7 +36,7 @@ export function CatalogPage() {
                 onClick={() => setTag(t)}
                 aria-pressed={tag === t}
                 className={`rounded-full px-3.5 py-1.5 text-sm capitalize transition ${
-                  tag === t ? 'bg-accent text-accent-ink' : 'bg-surface-2 text-muted hover:bg-surface-3 hover:text-text'
+                  tag === t ? 'bg-brand text-white shadow-[0_6px_20px_-8px_rgba(61,107,255,0.8)]' : 'bg-white/[0.05] text-muted hover:bg-white/10 hover:text-text'
                 }`}
               >
                 {t || 'Все'}

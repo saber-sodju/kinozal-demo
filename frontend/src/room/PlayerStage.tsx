@@ -168,7 +168,7 @@ export function PlayerStage(props: Props) {
           <p className="font-display text-2xl font-bold">Что смотрим?</p>
           <p className="max-w-sm text-sm text-muted">{canControl ? 'Выбери фильм из каталога или вставь ссылку.' : 'Ведущий скоро что-нибудь включит.'}</p>
           {canControl && (
-            <button onClick={props.onPickMedia} className="mt-1 h-11 rounded-xl bg-accent px-5 font-semibold text-accent-ink hover:bg-accent-strong">
+            <button onClick={props.onPickMedia} className="btn-press btn-sheen glow-brand bg-brand mt-1 h-11 rounded-xl px-5 font-semibold text-white">
               Выбрать видео
             </button>
           )}
@@ -225,7 +225,7 @@ export function PlayerStage(props: Props) {
       {/* Большая кнопка на паузе */}
       {media && ready && !playing && !locked && !error && (
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur">
+          <span className="pop-in flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-white shadow-[0_0_50px_rgba(91,110,255,0.45)] ring-1 ring-white/20 backdrop-blur-md">
             <PlayIcon size={34} className="ml-1" />
           </span>
         </div>
@@ -252,7 +252,7 @@ export function PlayerStage(props: Props) {
       {/* Присоединиться (нужен клик для звука) */}
       {locked && media && (
         <button onClick={props.onUnlock} className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-accent text-accent-ink shadow-[0_0_60px_rgba(245,181,68,0.5)]">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-brand text-white shadow-[0_0_70px_rgba(91,110,255,0.65)]">
             <PlayIcon size={32} className="ml-1" />
           </span>
           <span className="text-lg font-semibold">Нажми, чтобы присоединиться к просмотру</span>

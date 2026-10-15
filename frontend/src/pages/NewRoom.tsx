@@ -71,7 +71,7 @@ export function NewRoomPage() {
               disabled={i > 0 && !session}
               aria-current={step === i ? 'step' : undefined}
               className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm transition ${
-                step === i ? 'bg-accent text-accent-ink' : 'bg-surface-2 text-muted hover:text-text disabled:opacity-50'
+                step === i ? 'bg-brand text-white shadow-[0_6px_20px_-8px_rgba(61,107,255,0.8)]' : 'bg-white/[0.05] text-muted hover:text-text disabled:opacity-50'
               }`}
             >
               <span className="font-semibold">{i + 1}</span> {s}
@@ -80,7 +80,7 @@ export function NewRoomPage() {
         ))}
       </ol>
 
-      <div className="mt-8 rounded-2xl border border-white/5 bg-surface p-6 sm:p-8">
+      <div className="pop-in mt-8 rounded-3xl border border-white/[0.07] bg-surface/70 p-6 backdrop-blur-xl sm:p-8">
         {step === 0 && (
           <div className="max-w-md">
             <p className="mb-6 text-muted">Имя увидят друзья в комнате. Регистрация не нужна.</p>
@@ -126,7 +126,7 @@ export function NewRoomPage() {
                 ] as const).map(([value, title, text]) => (
                   <label
                     key={value}
-                    className={`cursor-pointer rounded-xl border p-4 transition ${mode === value ? 'border-accent bg-accent/8' : 'border-line hover:border-white/20'}`}
+                    className={`cursor-pointer rounded-xl border p-4 transition ${mode === value ? 'border-accent/70 bg-gradient-soft' : 'border-white/10 hover:border-white/20'}`}
                   >
                     <input type="radio" name="mode" value={value} checked={mode === value} onChange={() => setMode(value)} className="sr-only" />
                     <span className="block font-semibold">{title}</span>

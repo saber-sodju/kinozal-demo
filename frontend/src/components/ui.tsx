@@ -4,8 +4,8 @@ import { initials } from '../lib/format'
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-ink hover:bg-accent-strong shadow-[0_8px_30px_-10px_rgba(245,181,68,0.6)]',
-  secondary: 'bg-surface-2 text-text hover:bg-surface-3 border border-line',
+  primary: 'bg-brand text-white btn-sheen glow-brand hover:brightness-110',
+  secondary: 'bg-white/[0.04] text-text hover:bg-white/[0.08] border border-white/10 backdrop-blur',
   ghost: 'text-muted hover:text-text hover:bg-white/5',
   danger: 'bg-danger/15 text-danger hover:bg-danger/25',
 }
@@ -19,7 +19,7 @@ export function Button({
   const sizes = { sm: 'h-8 px-3 text-sm', md: 'h-10 px-4 text-sm', lg: 'h-12 px-6 text-base' }
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${sizes[size]} ${className}`}
+      className={`btn-press inline-flex items-center justify-center gap-2 rounded-xl font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${sizes[size]} ${className}`}
       {...rest}
     />
   )
@@ -37,7 +37,7 @@ export function IconButton({
       aria-label={label}
       title={label}
       className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors disabled:opacity-40 ${
-        active ? 'bg-accent/15 text-accent' : 'text-text/85 hover:bg-white/10 hover:text-text'
+        active ? 'bg-accent/15 text-accent' : 'text-text/85 hover:bg-white/10 hover:text-text active:scale-95'
       } ${className}`}
       {...rest}
     >
@@ -61,7 +61,7 @@ export function Avatar({
 }) {
   return (
     <span
-      className={`inline-flex shrink-0 select-none items-center justify-center rounded-full font-semibold text-accent-ink ${speaking ? 'speaking' : ''} ${dim ? 'opacity-40 grayscale' : ''}`}
+      className={`inline-flex shrink-0 select-none items-center justify-center rounded-full font-semibold text-[#0b0b18] ${speaking ? 'speaking' : ''} ${dim ? 'opacity-40 grayscale' : ''}`}
       style={{ width: size, height: size, background: color, fontSize: size * 0.42 }}
       aria-hidden
     >
@@ -73,7 +73,7 @@ export function Avatar({
 export function Badge({ children, tone = 'neutral' }: { children: ReactNode; tone?: 'neutral' | 'accent' | 'ok' | 'warn' }) {
   const tones = {
     neutral: 'bg-white/8 text-muted',
-    accent: 'bg-accent/15 text-accent',
+    accent: 'bg-accent/15 text-accent-strong',
     ok: 'bg-ok/15 text-ok',
     warn: 'bg-danger/15 text-danger',
   }
@@ -102,4 +102,4 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 }
 
 export const inputClass =
-  'h-11 w-full rounded-xl border border-line bg-surface-2 px-3.5 text-sm text-text placeholder:text-faint outline-none transition focus:border-accent/70 focus:ring-2 focus:ring-accent/20'
+  'h-11 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 text-sm text-text placeholder:text-faint outline-none transition duration-200 focus:border-accent/70 focus:bg-white/[0.06] focus:ring-4 focus:ring-accent/15'

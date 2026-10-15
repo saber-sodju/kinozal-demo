@@ -4,7 +4,7 @@ import type { Session } from '../lib/types'
 import { useToast } from './Toasts'
 import { Avatar, Button, inputClass } from './ui'
 
-export const AVATAR_COLORS = ['#F5B544', '#FF7A6B', '#7AD3A8', '#7FB2FF', '#C59BFF', '#FF9BD2', '#5ED0E0', '#E8D36A']
+export const AVATAR_COLORS = ['#5CC8FF', '#7C9BFF', '#B48CFF', '#F08BD8', '#5EE0B0', '#FFC56B', '#FF8F8F', '#6FE3F0']
 
 export function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   return (

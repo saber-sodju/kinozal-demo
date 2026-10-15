@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { Logo } from '../components/Header'
+import { Ambient } from '../components/Motion'
 import { ChatIcon, CheckIcon, LinkIcon, ListIcon, UsersIcon } from '../components/Icons'
 import { MediaPicker, type Pick } from '../components/MediaPicker'
 import { Modal } from '../components/Modal'
@@ -106,8 +107,8 @@ function JoinScreen({ preview, session, onJoin }: { preview: RoomPreview; sessio
       {preview.media?.poster_url && (
         <img src={preview.media.poster_url} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-20 blur-3xl" />
       )}
-      <div className="film-grain absolute inset-0" aria-hidden />
-      <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-surface/90 p-7 shadow-2xl backdrop-blur-xl">
+      <Ambient />
+      <div className="pop-in relative w-full max-w-md rounded-3xl border border-white/10 bg-surface/80 p-7 shadow-[0_30px_80px_-20px_rgba(20,30,90,0.9)] backdrop-blur-xl">
         <Logo />
         <p className="mt-7 text-sm text-muted">Тебя пригласили в комнату</p>
         <h1 className="mt-1 font-display text-3xl font-bold leading-tight">{preview.room.name}</h1>
@@ -307,7 +308,8 @@ function RoomView({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-white/5 px-4">
+      <Ambient />
+      <header className="glass sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
         <Logo className="shrink-0 [&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
         <div className="mx-1 h-5 w-px bg-white/10" />
         <h1 className="min-w-0 truncate font-semibold">{state.room?.name ?? '…'}</h1>
@@ -325,7 +327,7 @@ function RoomView({
 
       <div className={`mx-auto grid w-full max-w-[1800px] flex-1 gap-4 sm:p-4 ${theater ? '' : 'lg:grid-cols-[minmax(0,1fr)_370px]'}`}>
         <section className="min-w-0">
-          <div className="overflow-hidden ring-1 ring-white/5 sm:rounded-2xl">
+          <div className="overflow-hidden ring-1 ring-white/[0.08] sm:rounded-2xl sm:shadow-[0_24px_70px_-24px_rgba(61,107,255,0.55)]">
             <PlayerStage
               sync={sync.current}
               playback={state.playback}
@@ -359,7 +361,7 @@ function RoomView({
         </section>
 
         <aside
-          className={`flex h-[65dvh] min-h-[420px] flex-col overflow-hidden border-white/5 bg-surface sm:rounded-2xl sm:border lg:sticky lg:top-4 lg:h-[calc(100dvh-5.5rem)] ${theater ? 'lg:hidden' : ''}`}
+          className={`flex h-[65dvh] min-h-[420px] flex-col overflow-hidden border-white/[0.07] bg-surface/70 backdrop-blur-xl sm:rounded-2xl sm:border lg:sticky lg:top-4 lg:h-[calc(100dvh-5.5rem)] ${theater ? 'lg:hidden' : ''}`}
         >
           <div className="flex shrink-0 gap-1 border-b border-white/5 p-1.5" role="tablist">
             {tabs.map((t) => (
@@ -368,13 +370,13 @@ function RoomView({
                 role="tab"
                 aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2 text-sm font-medium transition ${
-                  tab === t.id ? 'bg-surface-3 text-text' : 'text-muted hover:text-text'
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2 text-sm font-medium transition duration-200 ${
+                  tab === t.id ? 'bg-white/[0.08] text-text shadow-[inset_0_0_0_1px_rgba(124,155,255,0.25)]' : 'text-muted hover:bg-white/[0.04] hover:text-text'
                 }`}
               >
                 <t.icon size={17} /> {t.label}
                 {!!t.badge && (
-                  <span className={`rounded-full px-1.5 text-[11px] font-bold ${t.id === 'chat' ? 'bg-accent text-accent-ink' : 'bg-white/10 text-muted'}`}>
+                  <span className={`rounded-full px-1.5 text-[11px] font-bold ${t.id === 'chat' ? 'bg-brand text-white' : 'bg-white/10 text-muted'}`}>
                     {t.badge}
                   </span>
                 )}

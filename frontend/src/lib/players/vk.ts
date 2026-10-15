@@ -85,10 +85,17 @@ export class VkPlayer implements PlayerAdapter {
     }
 
     await new Promise<void>((resolve) => {
+      // Плеер не запустился — не закрываем его своей ошибкой: VK мог показать проверку
+      // «я не робот» или своё сообщение. Даём их увидеть и нажать, а плеер продолжаем ждать.
       const timeout = window.setTimeout(() => {
-        this.emit({ type: 'error', message: 'Плеер VK не ответил. Возможно, видео недоступно в твоей стране.' })
+        this.emit({
+          type: 'warning',
+          message:
+            'Плеер VK не запустился. Посмотри, что он пишет: если просит подтвердить, что ты не робот, — нажми там «Продолжить». ' +
+            'Если пишет, что видео недоступно, — автор запретил показывать его на других сайтах.',
+        })
         resolve()
-      }, 20000)
+      }, 12000)
       player.on(E.INITED, (d: any) => {
         window.clearTimeout(timeout)
         this.state = 'unstarted'

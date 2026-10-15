@@ -135,7 +135,12 @@ async def resolve(body: ResolveIn, request: Request):
     try:
         media = await resolve_url(body.url)
     except ResolveError as exc:
+        # В лог — чтобы по `railway logs` было видно, какие ссылки не прошли и почему.
+        print(f"resolve failed: {body.url[:300]!r} -> {exc}", flush=True)
         return {"ok": False, "reason": str(exc)}
+    except Exception as exc:
+        print(f"resolve crashed: {body.url[:300]!r} -> {exc!r}", flush=True)
+        return {"ok": False, "reason": "Не удалось разобрать эту ссылку. Попробуй другую."}
     return {"ok": True, "media": media, "capabilities": capabilities_for(media["source"])}
 
 

@@ -10,6 +10,8 @@ export type PlayerEvent =
   | { type: 'error'; message: string }
   | { type: 'ad' }
   | { type: 'blocked' }
+  /** Плеер не готов, но это не конец: пользователь может сам что-то нажать внутри плеера */
+  | { type: 'warning'; message: string }
 
 /**
  * Единый интерфейс для всех источников. Синхронизация работает только через него,

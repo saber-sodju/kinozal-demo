@@ -56,6 +56,7 @@ export function PlayerStage(props: Props) {
   const playerRef = useRef<PlayerAdapter | null>(null)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState('')
+  const [warning, setWarning] = useState('')
   const [time, setTime] = useState(0)
   const [duration, setDuration] = useState<number | null>(null)
   const [drag, setDrag] = useState<number | null>(null)
@@ -68,11 +69,16 @@ export function PlayerStage(props: Props) {
     if (!sync || !host || !media) return
     setReady(false)
     setError('')
+    setWarning('')
     setDuration(media.duration_s ?? null)
     const player = createPlayer(media.source)
     playerRef.current = player
     player.onEvent((e) => {
-      if (e.type === 'ready') setReady(true)
+      if (e.type === 'ready') {
+        setReady(true)
+        setWarning('')
+      }
+      if (e.type === 'warning') setWarning(e.message)
       if (e.type === 'duration') setDuration(e.duration)
       if (e.type === 'error') setError(e.message)
     })
@@ -131,7 +137,7 @@ export function PlayerStage(props: Props) {
       <div ref={hostRef} className="absolute inset-0 [&>*]:h-full [&>*]:w-full" />
 
       {/* Перехват кликов: управление идёт через синхронизацию, а не напрямую в плеер. */}
-      {media && !error && (
+      {media && !error && !warning && (
         <button
           className="absolute inset-0 z-10 cursor-default"
           aria-label={playing ? 'Пауза' : 'Смотреть'}
@@ -183,9 +189,22 @@ export function PlayerStage(props: Props) {
       )}
 
       {/* Загрузка */}
-      {media && !ready && !error && !locked && (
+      {media && !ready && !error && !warning && !locked && (
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
           <Spinner size={36} />
+        </div>
+      )}
+
+      {/* Плеер источника требует действия пользователя — не закрываем его */}
+      {warning && !error && (
+        <div className="absolute inset-x-3 top-3 z-30 flex items-start gap-2.5 rounded-xl border border-accent/30 bg-black/85 p-3 text-sm backdrop-blur">
+          <AlertIcon size={18} className="mt-px shrink-0 text-accent" />
+          <p className="flex-1">{warning}</p>
+          {canControl && (
+            <button onClick={props.onPickMedia} className="shrink-0 rounded-lg bg-surface-3 px-3 py-1 text-xs font-semibold hover:bg-white/15">
+              Другое видео
+            </button>
+          )}
         </div>
       )}
 

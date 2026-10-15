@@ -622,3 +622,15 @@ class RoomManager:
 
 
 manager = RoomManager()
+
+
+def new_slug() -> str:
+    return secrets.token_urlsafe(8).replace("_", "x").replace("-", "z")
+
+
+def create_room_with_media(media: dict, name: str, host_session_id: str = "tg-bot") -> str:
+    """Комната, созданная не из браузера (например, ботом): ведущим станет первый вошедший."""
+    slug = new_slug()
+    media = {**media, "capabilities": capabilities_for(media["source"])}
+    db.create_room(slug, name or "Кинозал", "everyone", host_session_id, {"playback": {"media": media, "position": 0}, "queue": []})
+    return slug

@@ -4,6 +4,7 @@ import { SOURCE_NAMES, formatDuration } from '../lib/format'
 import type { Capabilities, CatalogItem, Media } from '../lib/types'
 import { AlertIcon, CheckIcon, SearchIcon } from './Icons'
 import { Poster, PosterCard } from './PosterCard'
+import { TgBotHint } from './TgBotHint'
 import { Badge, Button, Spinner, inputClass } from './ui'
 
 export type Pick = { kind: 'catalog'; item: CatalogItem } | { kind: 'url'; url: string; media: Media } | null
@@ -170,6 +171,7 @@ export function MediaPicker({ value, onChange }: { value: Pick; onChange: (p: Pi
           <p className="text-xs text-muted">
             Подходят YouTube, VK Видео, Telegram (публичные каналы), Vimeo, Internet Archive и прямые ссылки на <Badge>.mp4</Badge> <Badge>.webm</Badge> <Badge>.m3u8</Badge>
           </p>
+          <TgBotHint />
         </div>
       )}
     </div>

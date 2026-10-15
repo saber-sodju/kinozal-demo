@@ -292,6 +292,15 @@ class TelegramAdapter:
         if "tgme_widget_message_bubble" not in html or "tgme_widget_message_error" in html:
             raise ResolveError("Пост не найден. Проверь ссылку — канал должен быть публичным.")
         video = re.search(r'<video[^>]+src="([^"]+)"', html)
+        if not video and "message_media_not_supported" in html:
+            # Большой файл: Telegram не отдаёт его сайтам — достаём через нашего бота.
+            from .tgbot import bot
+
+            if bot.ready:
+                try:
+                    return await bot.from_public_post(channel, int(post))
+                except ValueError as exc:
+                    raise ResolveError(str(exc)) from exc
         if not video:
             if "message_media_not_supported" in html:
                 raise ResolveError(
@@ -318,6 +327,38 @@ class TelegramAdapter:
             "poster_url": unescape(thumb.group(1)) if thumb else None,
             "duration_s": None,
         }
+
+
+# ---------- Видео, которые бот Telegram уже подготовил (ссылка /tgf/<token>) ----------
+
+TGF = re.compile(r"/tgf/([A-Za-z0-9]{8,32})(?:$|[/?#])")
+
+
+class TgBotAdapter:
+    info = SourceInfo(
+        id="tgbot",
+        name="Telegram-бот (большие файлы)",
+        examples=["Перешли видео боту — он пришлёт ссылку на комнату"],
+        capabilities=Capabilities(),
+        notes=[
+            "Для больших фильмов из Telegram: перешли видео боту Кинозала, и он создаст комнату.",
+            "Работает и с закрытыми каналами — если в них не запрещена пересылка.",
+            "Видео идёт через наш сервер: первые секунды могут грузиться чуть дольше.",
+        ],
+    )
+
+    def match(self, url: str) -> bool:
+        return bool(TGF.search(url))
+
+    async def resolve(self, url: str) -> dict:
+        from .tgbot import bot
+
+        media = bot.media_for(TGF.search(url).group(1))
+        if not media:
+            raise ResolveError("Видео по этой ссылке не найдено. Перешли его боту ещё раз.")
+        if not bot.ready:
+            raise ResolveError("Бот Telegram сейчас не работает. Попробуй позже.")
+        return media
 
 
 # ---------- Internet Archive ----------
@@ -454,7 +495,7 @@ class DirectAdapter:
         }
 
 
-ADAPTERS = [YouTubeAdapter(), VKAdapter(), TelegramAdapter(), VimeoAdapter(), ArchiveAdapter(), DirectAdapter()]
+ADAPTERS = [YouTubeAdapter(), VKAdapter(), TelegramAdapter(), TgBotAdapter(), VimeoAdapter(), ArchiveAdapter(), DirectAdapter()]
 
 
 def source_infos() -> list[dict]:

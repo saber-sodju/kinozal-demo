@@ -13,6 +13,7 @@ import { ReportPage } from './pages/Report'
 import { RoomPage } from './pages/Room'
 import { SettingsPage } from './pages/Settings'
 import { SourcesPage } from './pages/Sources'
+import { TgLinkPage } from './pages/TgLink'
 
 function Layout() {
   return (
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="settings" element={<SettingsPage />} />
             <Route path="sources" element={<SourcesPage />} />
             <Route path="report" element={<ReportPage />} />
+            <Route path="tgf/:token" element={<TgLinkPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
           <Route path="r/:slug" element={<RoomPage />} />

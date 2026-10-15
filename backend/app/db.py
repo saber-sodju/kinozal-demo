@@ -74,6 +74,18 @@ CREATE TABLE IF NOT EXISTS reports (
     reason TEXT NOT NULL,
     created_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS tg_files (
+    token TEXT PRIMARY KEY,
+    peer TEXT NOT NULL,
+    msg_id INTEGER NOT NULL,
+    size INTEGER NOT NULL,
+    mime TEXT NOT NULL,
+    duration INTEGER,
+    title TEXT NOT NULL,
+    file_name TEXT,
+    created_at REAL NOT NULL,
+    UNIQUE(peer, msg_id)
+);
 """
 
 _conn: sqlite3.Connection | None = None
@@ -275,6 +287,25 @@ def recent_messages(room_slug: str, after_id: int = 0, limit: int = 80) -> list[
         }
         for r in reversed(rows)
     ]
+
+
+# ---------- Видео из Telegram (через бота) ----------
+
+def add_tg_file(token: str, peer: str, msg_id: int, size: int, mime: str, duration: int | None, title: str, file_name: str | None) -> None:
+    conn().execute(
+        "INSERT OR IGNORE INTO tg_files (token, peer, msg_id, size, mime, duration, title, file_name, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+        (token, peer, msg_id, size, mime, duration, title, file_name, time.time()),
+    )
+
+
+def get_tg_file(token: str) -> dict | None:
+    row = conn().execute("SELECT * FROM tg_files WHERE token = ?", (token,)).fetchone()
+    return dict(row) if row else None
+
+
+def find_tg_file(peer: str, msg_id: int) -> dict | None:
+    row = conn().execute("SELECT * FROM tg_files WHERE peer = ? AND msg_id = ?", (peer, msg_id)).fetchone()
+    return dict(row) if row else None
 
 
 def add_report(room_slug: str | None, kind: str, target: str | None, reason: str) -> None:

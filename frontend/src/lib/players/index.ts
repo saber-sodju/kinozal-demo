@@ -11,6 +11,7 @@ const REGISTRY: Record<SourceId, () => PlayerAdapter> = {
   vimeo: () => new VimeoPlayer(),
   vk: () => new VkPlayer(),
   telegram: () => new Html5Player(),
+  tgbot: () => new Html5Player(),
   archive: () => new Html5Player(),
   direct: () => new Html5Player(),
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AlertIcon, CheckIcon, CloseIcon } from '../components/Icons'
 import { LinkChecker } from '../components/MediaPicker'
+import { TgBotHint } from '../components/TgBotHint'
 import { Spinner } from '../components/ui'
 import { api } from '../lib/api'
 import type { SourceInfo } from '../lib/types'
@@ -28,6 +29,7 @@ export function SourcesPage() {
         <h2 className="mb-1 text-lg font-semibold">Проверить ссылку</h2>
         <p className="mb-4 text-sm text-muted">Вставь ссылку — покажем, получится ли посмотреть её вместе.</p>
         <LinkChecker />
+        <TgBotHint className="mt-4" />
       </section>
 
       <h2 className="mt-12 font-display text-2xl font-bold">Поддерживается</h2>

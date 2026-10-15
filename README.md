@@ -87,3 +87,24 @@ KINOZAL_TURN_URL=turn:example.com:3478
 KINOZAL_TURN_USER=...
 KINOZAL_TURN_PASS=...
 ```
+
+## Большие фильмы из Telegram (бот)
+
+Telegram не отдаёт сайтам большие файлы, поэтому их достаёт бот через MTProto (до 2 ГБ и больше).
+
+- Перешли видео боту → он создаст комнату и пришлёт ссылку.
+- Или вставь на сайте ссылку `t.me/канал/123` на большой файл из публичного канала.
+
+Видео идёт через сервер кусками по 512 КБ, с поддержкой перемотки и кэшем на диске.
+
+Настройка (переменные окружения):
+
+```
+TG_BOT_TOKEN=123456:ABC...   # от @BotFather
+TG_API_ID=1234567            # https://my.telegram.org → API development tools
+TG_API_HASH=0123abcd...
+KINOZAL_DB=/data/kinozal.db  # база, сессия бота и кэш — на постоянном диске
+TG_SESSION=/data/tgbot
+TG_CACHE_DIR=/data/tgcache
+TG_CACHE_GB=3                # предел кэша видео
+```

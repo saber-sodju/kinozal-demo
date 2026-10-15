@@ -23,6 +23,7 @@ export const SOURCE_NAMES: Record<string, string> = {
   youtube: 'YouTube',
   vk: 'VK Видео',
   telegram: 'Telegram',
+  tgbot: 'Telegram',
   archive: 'Internet Archive',
   vimeo: 'Vimeo',
   direct: 'Файл по ссылке',

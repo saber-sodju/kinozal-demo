@@ -6,7 +6,7 @@ import { useToast } from '../components/Toasts'
 import { Avatar, Button, Spinner, inputClass } from '../components/ui'
 import { api, verifySession } from '../lib/api'
 import { createRoom } from '../lib/createRoom'
-import type { CatalogItem, Session } from '../lib/types'
+import type { CatalogItem, Media, Session } from '../lib/types'
 
 const STEPS = ['Кто ты', 'Что смотрим', 'Настройки']
 
@@ -30,6 +30,14 @@ export function NewRoomPage() {
     if (film) {
       api<{ item: CatalogItem }>(`/api/catalog/${film}`).then((d) => setPick({ kind: 'catalog', item: d.item })).catch(() => {})
     }
+    // Ссылка от Telegram-бота (/tgf/…) или любая другая, переданная в ?link=
+    const link = params.get('link')
+    if (link) {
+      api<{ ok: boolean; media?: Media; reason?: string }>('/api/media/resolve', { body: { url: link } })
+        .then((r) => (r.ok && r.media ? setPick({ kind: 'url', url: link, media: r.media }) : toast(r.reason ?? 'Ссылка не подошла', 'error')))
+        .catch(() => {})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params])
 
   async function submit() {

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import os
 import secrets
 import time
@@ -15,12 +16,14 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import db
-from .rooms import manager
+from .rooms import manager, new_slug
+from .tgbot import CHUNK, PREFETCH
+from .tgbot import bot as tgbot
 from .sources import ResolveError, capabilities_for, resolve_url, source_infos
 
 DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
@@ -42,8 +45,10 @@ def ice_servers() -> list[dict]:
 async def lifespan(_: FastAPI):
     db.init()
     task = asyncio.create_task(manager.cleanup_loop())
+    await tgbot.start()
     yield
     task.cancel()
+    await tgbot.stop()
     for room in manager.rooms.values():
         room.save()
 
@@ -171,7 +176,7 @@ async def create_room(body: RoomIn, request: Request, authorization: str | None 
     if media:
         media["capabilities"] = capabilities_for(media["source"])
 
-    slug = secrets.token_urlsafe(8).replace("_", "x").replace("-", "z")
+    slug = new_slug()
     name = body.name.strip() or f"Кинозал {session['name']}"
     mode = body.control_mode if body.control_mode in ("everyone", "host_only") else "everyone"
     db.create_room(slug, name, mode, session["id"], {"playback": {"media": media, "position": 0}, "queue": []})
@@ -203,6 +208,67 @@ def report(body: ReportIn, request: Request):
     limit(request, "report", 5, 300)
     db.add_report(body.room_slug, body.kind, body.target, body.reason)
     return {"ok": True}
+
+
+@app.get("/api/config")
+def config():
+    return {"tg_bot": tgbot.username if tgbot.ready else None}
+
+
+# ---------- видео из Telegram (через бота) ----------
+
+MAX_RESPONSE = 64 * 1024 * 1024  # один ответ — не больше 64 МБ, браузер сам запросит дальше
+
+
+@app.get("/api/tg/stream/{token}")
+async def tg_stream(token: str, request: Request):
+    f = db.get_tg_file(token)
+    if not f or not tgbot.ready:
+        raise HTTPException(404, "Видео не найдено")
+    size = f["size"]
+    start, end = 0, size - 1
+    status = 200
+    rng = request.headers.get("range", "")
+    m = re.match(r"bytes=(\d*)-(\d*)", rng)
+    if m and (m.group(1) or m.group(2)):
+        status = 206
+        if m.group(1):
+            start = int(m.group(1))
+            end = int(m.group(2)) if m.group(2) else size - 1
+        else:  # bytes=-N — последние N байт
+            start = max(0, size - int(m.group(2)))
+        end = min(end, size - 1, start + MAX_RESPONSE - 1)
+        if start >= size or start > end:
+            return Response(status_code=416, headers={"Content-Range": f"bytes */{size}"})
+
+    async def body():
+        first, last = start // CHUNK, end // CHUNK
+        for idx in range(first, last + 1):
+            for ahead in range(idx + 1, idx + 1 + PREFETCH):
+                tgbot.prefetch(token, ahead, size)
+            data = await tgbot.chunk(token, idx, size)
+            lo = start - idx * CHUNK if idx == first else 0
+            hi = end - idx * CHUNK + 1 if idx == last else len(data)
+            yield data[lo:hi]
+
+    headers = {
+        "Accept-Ranges": "bytes",
+        "Content-Length": str(end - start + 1),
+        "Cache-Control": "private, max-age=3600",
+    }
+    if status == 206:
+        headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+    return StreamingResponse(body(), status_code=status, headers=headers, media_type=f["mime"])
+
+
+@app.get("/api/tg/thumb/{token}")
+async def tg_thumb(token: str):
+    if not db.get_tg_file(token) or not tgbot.ready:
+        raise HTTPException(404)
+    data = await tgbot.thumbnail(token)
+    if not data:
+        raise HTTPException(404)
+    return Response(data, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/api/health")

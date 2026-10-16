@@ -148,7 +148,8 @@ export function ChatPanel({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <MessageList messages={messages} you={you} />
-      <div className="border-t border-white/5 p-3">
+      {/* снизу — отступ под полоску «домой» на iPhone */}
+      <div className="border-t border-white/5 p-3 max-lg:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <ChatInput onSend={onSend} inputRef={inputRef} />
       </div>
     </div>

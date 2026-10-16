@@ -87,7 +87,7 @@ export function FsChat({
             </button>
           </div>
           <MessageList messages={messages} you={you} dark />
-          <div className="p-2.5">
+          <div className="p-2.5 max-sm:pb-[max(0.625rem,env(safe-area-inset-bottom))]">
             <ChatInput onSend={onSend} dark />
           </div>
         </div>

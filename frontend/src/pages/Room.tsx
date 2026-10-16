@@ -409,7 +409,11 @@ function RoomView({
   )
 
   return (
-    <div className="flex flex-col max-lg:app-height max-lg:fixed max-lg:inset-x-0 max-lg:top-0 max-lg:overflow-hidden lg:min-h-dvh">
+    <div
+      className={`flex flex-col max-lg:fixed max-lg:inset-x-0 max-lg:top-0 max-lg:overflow-hidden max-lg:bg-bg lg:min-h-dvh ${
+        kbOpen ? 'max-lg:app-height' : 'max-lg:h-[100dvh]'
+      }`}
+    >
       <Ambient />
       <header className={`glass sticky top-0 z-40 flex h-12 shrink-0 sm:h-14 ${kbOpen ? 'max-lg:hidden' : ''} items-center gap-3 border-b border-white/[0.06] px-4`}>
         <Logo className="shrink-0 [&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
@@ -434,7 +438,7 @@ function RoomView({
           <div
             className={
               pseudoFs
-                ? 'app-height fixed inset-x-0 top-0 z-[80] flex w-screen items-stretch bg-black'
+                ? `fixed inset-x-0 top-0 z-[80] flex w-screen items-stretch bg-black ${kbOpen ? 'app-height' : 'h-[100dvh]'}`
                 : 'overflow-hidden ring-1 ring-white/[0.08] sm:rounded-2xl sm:shadow-[0_24px_70px_-24px_rgba(61,107,255,0.55)]'
             }
           >

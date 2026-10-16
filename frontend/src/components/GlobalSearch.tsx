@@ -36,6 +36,7 @@ const PROVIDER_NAMES: Record<string, string> = {
   catalog: 'Каталог',
   rutube: 'Rutube',
   youtube: 'YouTube',
+  vk: 'VK Видео',
   archive: 'Internet Archive',
 }
 
@@ -190,7 +191,7 @@ export function GlobalSearch({
       </div>
 
       {query.trim().length < 2 ? (
-        <p className="py-10 text-center text-sm text-muted">Напиши название — поищем сразу на Rutube, YouTube, в Internet Archive и в нашем каталоге.</p>
+        <p className="py-10 text-center text-sm text-muted">Напиши название — поищем сразу на Rutube, YouTube, VK, в Internet Archive и в нашем каталоге.</p>
       ) : data && data.results.length === 0 && !loading ? (
         <p className="py-10 text-center text-sm text-muted">Ничего не нашлось. Попробуй другое название или переключи фильтр на «Всё».</p>
       ) : (

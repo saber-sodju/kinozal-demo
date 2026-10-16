@@ -3,6 +3,7 @@
 Площадки опрашиваются параллельно через их официальные/публичные API:
   • Rutube          — открытый поиск, ключ не нужен;
   • YouTube         — YouTube Data API (YT_API_KEY), только встраиваемые видео;
+  • VK Видео        — VK API video.search (VK_TOKEN — ключ пользователя);
   • Internet Archive — открытый поиск;
   • наш каталог.
 Результаты кэшируются, чтобы не тратить лимиты площадок на одинаковые запросы.
@@ -100,6 +101,31 @@ async def search_youtube(q: str) -> list[dict]:
     return out
 
 
+async def search_vk(q: str) -> list[dict]:
+    token = os.environ.get("VK_TOKEN")
+    if not token:
+        raise LookupError("disabled")
+    params = {"q": q, "count": "30", "adult": "0", "sort": "2", "access_token": token, "v": "5.199"}
+    _, data = await fetch_json("https://api.vk.com/method/video.search?" + urllib.parse.urlencode(params))
+    if "error" in data:
+        raise RuntimeError(f"vk {data['error'].get('error_code')}: {data['error'].get('error_msg')}")
+    out = []
+    for v in (data.get("response") or {}).get("items") or []:
+        if v.get("content_restricted") or v.get("live") or not v.get("player"):
+            continue
+        images = v.get("image") or []
+        thumb = min(images, key=lambda i: abs(i.get("width", 0) - 640)).get("url") if images else None
+        out.append({
+            "source": "vk",
+            "url": f"https://vkvideo.ru/video{v['owner_id']}_{v['id']}",
+            "title": v.get("title") or "",
+            "thumb": thumb,
+            "duration_s": v.get("duration"),
+            "author": None,
+        })
+    return out
+
+
 async def search_archive(q: str) -> list[dict]:
     params = {
         "q": f"({q}) AND mediatype:movies AND -collection:stream_only",
@@ -151,6 +177,7 @@ PROVIDERS = {
     "catalog": search_catalog,
     "rutube": search_rutube,
     "youtube": search_youtube,
+    "vk": search_vk,
     "archive": search_archive,
 }
 

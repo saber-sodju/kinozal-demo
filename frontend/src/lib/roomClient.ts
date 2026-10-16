@@ -28,16 +28,23 @@ export class RoomClient extends Emitter {
   private clockOffset = 0
   lastMessageId = 0
 
-  constructor(slug: string) {
+  private base: string | null
+  private tokenFn: () => string | null
+
+  /** base — адрес сервера (https://…), по умолчанию текущий сайт; token — ключ сессии. */
+  constructor(slug: string, opts: { base?: string; token?: () => string | null } = {}) {
     super()
     this.slug = slug
+    this.base = opts.base ?? null
+    this.tokenFn = opts.token ?? getToken
   }
 
   connect(): void {
     this.stopped = false
-    const proto = location.protocol === 'https:' ? 'wss' : 'ws'
-    const params = new URLSearchParams({ token: getToken() ?? '', last_msg_id: String(this.lastMessageId) })
-    const ws = new WebSocket(`${proto}://${location.host}/ws/rooms/${this.slug}?${params}`)
+    const origin = new URL(this.base ?? location.origin)
+    const proto = origin.protocol === 'https:' ? 'wss' : 'ws'
+    const params = new URLSearchParams({ token: this.tokenFn() ?? '', last_msg_id: String(this.lastMessageId) })
+    const ws = new WebSocket(`${proto}://${origin.host}/ws/rooms/${this.slug}?${params}`)
     this.ws = ws
     this.setStatus(this.attempt === 0 ? 'connecting' : 'reconnecting')
 

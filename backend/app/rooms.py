@@ -348,6 +348,29 @@ class Room:
         else:
             await self.set_media(media, m, autoplay=True)
 
+    async def media_external(self, m: Member, msg: dict) -> None:
+        if not self.can_control(m):
+            return await self.error(m, "Менять видео могут только ведущий и модераторы.")
+        url = str(msg.get("url", ""))[:2000]
+        if not url.startswith(("http://", "https://")):
+            return
+        from urllib.parse import urlparse
+
+        if self.playback.media and self.playback.media.get("source") == "external" and self.playback.media.get("url") == url:
+            return  # уже смотрим эту страницу
+        duration = msg.get("duration")
+        media = {
+            "source": "external",
+            "external_id": url,
+            "url": url,
+            "page_url": url,
+            "title": (str(msg.get("title") or "") or urlparse(url).hostname or "Видео на сайте")[:160],
+            "subtitle": urlparse(url).hostname,
+            "poster_url": None,
+            "duration_s": int(duration) if isinstance(duration, (int, float)) and duration > 0 else None,
+        }
+        await self.set_media(media, m, autoplay=False)
+
     async def queue_action(self, m: Member, msg: dict) -> None:
         if not self.can_control(m):
             return await self.error(m, "Очередью управляют только ведущий и модераторы.")
@@ -608,6 +631,8 @@ class RoomManager:
                 await room.report(member, msg)
             elif kind == "media.set":
                 await room.media_set(member, msg)
+            elif kind == "media.external":
+                await room.media_external(member, msg)
             elif kind == "queue.action":
                 await room.queue_action(member, msg)
             elif kind == "playback.next":

@@ -182,6 +182,10 @@ export function MediaPicker({ value, onChange }: { value: Pick; onChange: (p: Pi
             Подходят YouTube, VK Видео, Telegram (публичные каналы), Vimeo, Internet Archive и прямые ссылки на <Badge>.mp4</Badge> <Badge>.webm</Badge> <Badge>.m3u8</Badge>
           </p>
           <TgBotHint />
+          <p className="rounded-xl bg-white/[0.04] px-3.5 py-3 text-sm text-muted">
+            Фильм на другом сайте? Нажми в комнате «Показать вкладку» или поставь{' '}
+            <a href="/extension" target="_blank" className="font-semibold text-accent hover:text-accent-strong">расширение Kinora</a> — оно синхронизирует видео на любом сайте.
+          </p>
         </div>
       )}
     </div>

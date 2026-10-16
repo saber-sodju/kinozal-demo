@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kinora</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; width: 340px; padding: 18px;
+        font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: #f3f4fa;
+        background:
+          radial-gradient(ellipse 90% 60% at 10% -10%, rgba(30, 139, 255, 0.35), transparent 70%),
+          radial-gradient(ellipse 80% 60% at 110% 10%, rgba(124, 58, 237, 0.35), transparent 70%),
+          #07070f;
+      }
+      header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+      header img { width: 30px; height: 30px; }
+      .brand { font: 800 20px/1 system-ui, sans-serif; letter-spacing: -0.02em; }
+      .brand span { background: linear-gradient(90deg, #5cc8ff, #3d7bff, #a855f7); -webkit-background-clip: text; color: transparent; }
+      .muted { color: #a3a7c2; font-size: 13px; }
+      .card { padding: 14px; border-radius: 16px; background: rgba(21, 23, 41, 0.8); border: 1px solid rgba(255, 255, 255, 0.08); }
+      label { display: block; font-weight: 600; margin-bottom: 6px; }
+      input {
+        width: 100%; height: 40px; padding: 0 12px; border-radius: 12px; outline: none;
+        border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #f3f4fa; font: inherit;
+      }
+      input:focus { border-color: rgba(124, 155, 255, 0.7); box-shadow: 0 0 0 4px rgba(124, 155, 255, 0.15); }
+      button {
+        width: 100%; height: 40px; margin-top: 10px; border: 0; border-radius: 12px; cursor: pointer;
+        font: 600 14px system-ui, sans-serif; color: #fff;
+        background: linear-gradient(120deg, #1d6fe8, #3b55f0 45%, #7c3aed);
+        box-shadow: 0 8px 24px -10px rgba(61, 107, 255, 0.8); transition: transform 0.15s, filter 0.15s;
+      }
+      button:hover { filter: brightness(1.1); }
+      button:active { transform: scale(0.97); }
+      button.ghost { background: rgba(255, 255, 255, 0.06); box-shadow: none; border: 1px solid rgba(255, 255, 255, 0.1); }
+      button.danger { background: rgba(255, 107, 122, 0.15); color: #ff8a96; box-shadow: none; }
+      button:disabled { opacity: 0.6; cursor: wait; }
+      .or { text-align: center; margin: 12px 0 2px; color: #6f7495; font-size: 12px; }
+      .err { margin-top: 10px; color: #ff8a96; font-size: 13px; }
+      .ok { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade9b; box-shadow: 0 0 0 4px rgba(74, 222, 155, 0.2); }
+      a { color: #7c9bff; }
+      .hidden { display: none; }
+      .link { margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 12px; word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon48.png" alt="" />
+      <div class="brand">K<span>inora</span></div>
+    </header>
+
+    <section id="login" class="card hidden">
+      <label for="name">Как тебя зовут?</label>
+      <input id="name" maxlength="32" placeholder="Имя или ник" autocomplete="nickname" />
+      <button id="loginBtn">Продолжить</button>
+    </section>
+
+    <section id="connect" class="hidden">
+      <p class="muted" style="margin-top: 0">Открой фильм на любом сайте и подключи вкладку — пауза и перемотка будут у всех одновременно.</p>
+      <div class="card">
+        <label for="link">Ссылка на комнату</label>
+        <input id="link" placeholder="https://…/r/…" />
+        <button id="attachBtn">Подключить эту вкладку</button>
+        <div class="or">или</div>
+        <button id="createBtn" class="ghost">Создать комнату для этой вкладки</button>
+      </div>
+    </section>
+
+    <section id="attached" class="card hidden">
+      <div class="ok"><span class="dot"></span> Вкладка подключена</div>
+      <p class="muted">Друзьям: установить Kinora, открыть ту же страницу и подключиться по ссылке:</p>
+      <div id="roomLink" class="link"></div>
+      <button id="copyBtn">Скопировать ссылку</button>
+      <button id="openBtn" class="ghost">Открыть комнату (чат и голос)</button>
+      <button id="detachBtn" class="danger">Отключить</button>
+    </section>
+
+    <div id="err" class="err"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

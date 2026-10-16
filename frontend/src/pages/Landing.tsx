@@ -20,7 +20,7 @@ const SOURCES = [
   { id: 'telegram', name: 'Telegram' },
   { id: 'vimeo', name: 'Vimeo' },
   { id: 'archive', name: 'Internet Archive' },
-  { id: 'direct', name: 'Файлы .mp4 / HLS' },
+  { id: 'direct', name: 'Любой сайт — расширение' },
 ]
 
 const PEOPLE = [

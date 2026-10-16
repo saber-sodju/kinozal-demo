@@ -67,7 +67,7 @@ export function PlayerStage(props: Props) {
   // Монтируем адаптер плеера при смене видео.
   useEffect(() => {
     const host = hostRef.current
-    if (!sync || !host || !media) return
+    if (!sync || !host || !media || media.source === 'external') return
     setReady(false)
     setError('')
     setWarning('')
@@ -188,6 +188,25 @@ export function PlayerStage(props: Props) {
         </div>
       )}
 
+      {/* Смотрят на другом сайте через расширение */}
+      {media?.source === 'external' && (
+        <div className="film-grain absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 p-6 pb-24 text-center">
+          <img src="/logo-mark.png" alt="" className="float h-14 w-14" />
+          <p className="font-display text-xl font-bold sm:text-2xl">Смотрим на {media.subtitle ?? 'другом сайте'}</p>
+          <p className="max-w-md text-sm text-muted">
+            Открой страницу, нажми на значок Kinora → «Подключить эту вкладку» и вставь ссылку на эту комнату. Пауза и перемотка — у всех вместе.
+          </p>
+          <div className="mt-1 flex flex-wrap justify-center gap-2">
+            <a href={media.url} target="_blank" rel="noreferrer" className="btn-press btn-sheen glow-brand bg-brand inline-flex h-11 items-center rounded-xl px-5 font-semibold text-white">
+              Открыть страницу
+            </a>
+            <a href="/extension" target="_blank" className="btn-press inline-flex h-11 items-center rounded-xl border border-white/10 bg-white/[0.06] px-5 font-semibold hover:bg-white/10">
+              Нет расширения?
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Ошибка источника */}
       {error && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/85 p-6 text-center">
@@ -202,7 +221,7 @@ export function PlayerStage(props: Props) {
       )}
 
       {/* Загрузка */}
-      {media && !ready && !error && !warning && !locked && (
+      {media && media.source !== 'external' && !ready && !error && !warning && !locked && (
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
           <Spinner size={36} />
         </div>

@@ -16,6 +16,7 @@ const REGISTRY: Record<SourceId, () => PlayerAdapter> = {
   tgbot: () => new Html5Player(),
   archive: () => new Html5Player(),
   direct: () => new Html5Player(),
+  external: () => new Html5Player(), // не используется: видео играет расширение на сайте
 }
 
 export function createPlayer(source: SourceId): PlayerAdapter {

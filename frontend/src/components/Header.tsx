@@ -48,7 +48,7 @@ export function Header() {
         <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Основная навигация">
           <NavLink to="/search" className={navClass}>Поиск</NavLink>
           <NavLink to="/catalog" className={navClass}>Каталог</NavLink>
-          <NavLink to="/sources" className={navClass}>Источники</NavLink>
+          <NavLink to="/extension" className={navClass}>Любой сайт</NavLink>
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <HeaderSearch />
@@ -82,6 +82,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <p>Kinora — смотрим вместе, даже когда далеко.</p>
         <nav className="flex gap-4" aria-label="Нижняя навигация">
+          <Link to="/extension" className="hover:text-text">Расширение</Link>
           <Link to="/sources" className="hover:text-text">Источники и ограничения</Link>
           <Link to="/report" className="hover:text-text">Сообщить о нарушении</Link>
         </nav>

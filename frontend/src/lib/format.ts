@@ -28,6 +28,7 @@ export const SOURCE_NAMES: Record<string, string> = {
   archive: 'Internet Archive',
   vimeo: 'Vimeo',
   direct: 'Файл по ссылке',
+  external: 'Сайт (расширение)',
 }
 
 export function initials(name: string): string {

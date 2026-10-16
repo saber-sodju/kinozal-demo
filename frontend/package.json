@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && node scripts/build-ext.mjs && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:ext": "node scripts/build-ext.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@types/chrome": "^0.0.300",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/vimeo__player": "^2.18.3",
@@ -27,6 +29,7 @@
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
+    "fflate": "^0.8.2",
     "globals": "^16.0.0",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",

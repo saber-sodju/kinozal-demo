@@ -6,6 +6,7 @@ import { Ambient } from './components/Motion'
 import { ToastProvider } from './components/Toasts'
 import './index.css'
 import { CatalogPage } from './pages/Catalog'
+import { ExtensionPage } from './pages/Extension'
 import { FilmPage } from './pages/Film'
 import { LandingPage } from './pages/Landing'
 import { NewRoomPage } from './pages/NewRoom'
@@ -41,6 +42,7 @@ createRoot(document.getElementById('root')!).render(
             <Route index element={<LandingPage />} />
             <Route path="catalog" element={<CatalogPage />} />
             <Route path="search" element={<SearchPage />} />
+            <Route path="extension" element={<ExtensionPage />} />
             <Route path="film/:id" element={<FilmPage />} />
             <Route path="new" element={<NewRoomPage />} />
             <Route path="settings" element={<SettingsPage />} />

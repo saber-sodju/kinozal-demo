@@ -3,12 +3,14 @@ import type { RoomClient } from './roomClient'
 
 type Signal = { want?: boolean; sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit }
 
+const MAX_BITRATE = 2_500_000 // ~720p30 — разумно для 3–5 зрителей
+
 interface Peer {
   pc: RTCPeerConnection
   pending: RTCIceCandidateInit[]
 }
 
-const MAX_BITRATE = 2_500_000 // ~720p30 — разумно для 3–5 зрителей
+
 
 /**
  * Демонстрация вкладки (как в Discord): один участник показывает вкладку со звуком,
@@ -20,6 +22,8 @@ export class ScreenShare extends Emitter {
   remoteStream: MediaStream | null = null
   sharerId: string | null = null
   sharerName = ''
+  /** Состояние соединения у зрителя: ждём предложение → connecting → connected / failed. */
+  viewerState: 'waiting' | RTCPeerConnectionState = 'waiting'
   private client: RoomClient
   private iceServers: RTCIceServer[] = []
   private selfId = ''
@@ -129,6 +133,7 @@ export class ScreenShare extends Emitter {
     const id = this.sharerId
     this.closePeer(id)
     this.remoteStream = null
+    this.viewerState = 'waiting'
     this.client.send({ type: 'screen.signal', to: id, data: { want: true } })
     this.emit('change')
   }
@@ -139,6 +144,7 @@ export class ScreenShare extends Emitter {
     this.sharerId = null
     this.sharerName = ''
     this.remoteStream = null
+    this.viewerState = 'waiting'
     if (had) this.emit('change')
   }
 
@@ -153,6 +159,10 @@ export class ScreenShare extends Emitter {
       if (e.candidate) this.client.send({ type: 'screen.signal', to: id, data: { candidate: e.candidate.toJSON() } })
     }
     pc.onconnectionstatechange = () => {
+      if (!this.sharing && id === this.sharerId) {
+        this.viewerState = pc.connectionState
+        this.emit('change')
+      }
       if (pc.connectionState === 'failed') this.emit('failed', id)
     }
     return peer
@@ -165,13 +175,6 @@ export class ScreenShare extends Emitter {
         if (data.want && this.localStream) {
           const peer = this.makePeer(from)
           for (const track of this.localStream.getTracks()) peer.pc.addTrack(track, this.localStream)
-          for (const sender of peer.pc.getSenders()) {
-            if (sender.track?.kind !== 'video') continue
-            const params = sender.getParameters()
-            params.encodings = params.encodings?.length ? params.encodings : [{}]
-            params.encodings[0].maxBitrate = MAX_BITRATE
-            await sender.setParameters(params).catch(() => {})
-          }
           const offer = await peer.pc.createOffer()
           await peer.pc.setLocalDescription(offer)
           this.client.send({ type: 'screen.signal', to: from, data: { sdp: peer.pc.localDescription?.toJSON() } })
@@ -180,6 +183,14 @@ export class ScreenShare extends Emitter {
           if (!peer) return
           await peer.pc.setRemoteDescription(data.sdp)
           for (const c of peer.pending.splice(0)) await peer.pc.addIceCandidate(c)
+          // Ограничение битрейта — только после согласования, иначе Chrome может не отправлять видео.
+          for (const sender of peer.pc.getSenders()) {
+            if (sender.track?.kind !== 'video') continue
+            const params = sender.getParameters()
+            if (!params.encodings?.length) continue
+            params.encodings[0].maxBitrate = MAX_BITRATE
+            await sender.setParameters(params).catch(() => {})
+          }
         } else if (data.candidate) {
           await this.addCandidate(from, data.candidate)
         }

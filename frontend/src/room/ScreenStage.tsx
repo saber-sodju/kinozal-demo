@@ -38,14 +38,46 @@ export function ScreenStage({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [waitedLong, setWaitedLong] = useState(false)
+  const [needTap, setNeedTap] = useState(false)
+  const [mutedFallback, setMutedFallback] = useState(false)
   const stream = screen.sharing ? screen.localStream : screen.remoteStream
 
   useEffect(() => {
     const v = videoRef.current
     if (!v) return
     if (v.srcObject !== stream) v.srcObject = stream
-    if (stream && !locked) void v.play().catch(() => {})
-  }, [stream, locked])
+    if (!stream) return
+    if (screen.sharing) {
+      void v.play().catch(() => {}) // своё превью — без звука, играет всегда
+      return
+    }
+    // Телефоны часто не дают включить видео со звуком без нажатия — тогда просим нажать.
+    v.play()
+      .then(() => setNeedTap(false))
+      .catch(() => setNeedTap(true))
+    const t = window.setTimeout(() => v.paused && setNeedTap(true), 1500)
+    return () => window.clearTimeout(t)
+  }, [stream, locked, screen.sharing])
+
+  function tapToWatch() {
+    const v = videoRef.current
+    if (!v) return
+    v.muted = false
+    v.play()
+      .then(() => {
+        setNeedTap(false)
+        setMutedFallback(false)
+      })
+      .catch(() => {
+        // Совсем строгий браузер: показываем хотя бы картинку без звука.
+        v.muted = true
+        void v.play().then(() => {
+          setNeedTap(false)
+          setMutedFallback(true)
+        })
+      })
+    onUnlock()
+  }
 
   useEffect(() => {
     setWaitedLong(false)
@@ -79,9 +111,20 @@ export function ScreenStage({
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 p-6 text-center">
           <Spinner size={34} />
           <p className="font-semibold">Подключаемся к трансляции…</p>
-          {waitedLong && (
+          {!screen.sharing && screen.viewerState !== 'waiting' && (
+            <p className="text-xs text-faint">
+              {screen.viewerState === 'connecting' || screen.viewerState === 'new'
+                ? 'устанавливаем соединение'
+                : screen.viewerState === 'connected'
+                  ? 'соединение есть, ждём картинку'
+                  : screen.viewerState === 'failed'
+                    ? 'сеть блокирует прямое соединение'
+                    : screen.viewerState}
+            </p>
+          )}
+          {(waitedLong || screen.viewerState === 'failed') && (
             <div className="max-w-sm text-sm text-muted">
-              Долго не подключается — возможно, сеть блокирует прямое соединение.
+              Не подключается — возможно, сеть блокирует прямое соединение (часто так на мобильном интернете). Попробуй через Wi-Fi.
               <button onClick={() => screen.retry()} className="ml-1 font-semibold text-accent hover:text-accent-strong">
                 Попробовать снова
               </button>
@@ -90,8 +133,14 @@ export function ScreenStage({
         </div>
       )}
 
-      {locked && stream && !screen.sharing && (
-        <button onClick={onUnlock} className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm">
+      {mutedFallback && (
+        <button onClick={tapToWatch} className="absolute right-3 top-3 z-40 rounded-xl bg-black/70 px-3 py-1.5 text-xs font-semibold backdrop-blur">
+          🔇 Нажми, чтобы включить звук
+        </button>
+      )}
+
+      {(needTap || locked) && stream && !screen.sharing && (
+        <button onClick={tapToWatch} className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-black/70 backdrop-blur-sm">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-brand text-white shadow-[0_0_70px_rgba(91,110,255,0.65)]">
             <PlayIcon size={32} className="ml-1" />
           </span>

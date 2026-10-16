@@ -31,9 +31,11 @@ export function VoiceBar({
   const othersInVoice = online.filter((m) => m.in_voice)
 
   return (
-    <div className={`flex flex-wrap items-center gap-x-4 gap-y-3 ${compact ? 'mt-2' : ''}`}>
+    <div
+      className={`flex items-center gap-x-3 gap-y-3 max-lg:no-scrollbar max-lg:flex-nowrap max-lg:overflow-x-auto lg:flex-wrap lg:gap-x-4 ${compact ? 'mt-2' : ''}`}
+    >
       {!compact && (
-        <div className="flex items-center gap-1.5" aria-label="Кто в комнате">
+        <div className="flex shrink-0 items-center gap-1.5 max-sm:hidden" aria-label="Кто в комнате">
           {online.slice(0, 8).map((m) => (
             <span key={m.id} className="relative" title={`${m.name}${m.in_voice ? (m.muted ? ' · микрофон выкл.' : ' · в голосе') : ''}`}>
               <Avatar name={m.name} color={m.color} size={34} speaking={speaking.has(m.id)} />
@@ -48,7 +50,7 @@ export function VoiceBar({
         </div>
       )}
 
-      <div className="flex items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5">
         {joined && voice?.audioBlocked && (
           <button
             onClick={() => voice.resumeAudio()}
@@ -92,7 +94,7 @@ export function VoiceBar({
         )}
       </div>
 
-      <div className="flex items-center gap-0.5" aria-label="Реакции">
+      <div className="flex shrink-0 items-center gap-0.5" aria-label="Реакции">
         {reactions.map((e) => (
           <button
             key={e}
@@ -108,7 +110,7 @@ export function VoiceBar({
       {onShareScreen && (
         <button
           onClick={onShareScreen}
-          className={`btn-press inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold transition ${
+          className={`btn-press inline-flex h-10 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold transition ${
             sharing ? 'bg-danger/15 text-danger hover:bg-danger/25' : 'bg-surface-2 hover:bg-surface-3'
           }`}
           title="Показать вкладку с любого сайта — как в Discord"
@@ -118,7 +120,7 @@ export function VoiceBar({
       )}
 
       {onInvite && !compact && (
-        <button onClick={onInvite} className="btn-press btn-sheen glow-brand bg-brand ml-auto inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-white">
+        <button onClick={onInvite} className="btn-press btn-sheen glow-brand bg-brand ml-auto inline-flex h-10 shrink-0 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-white">
           <LinkIcon size={17} /> Пригласить
         </button>
       )}

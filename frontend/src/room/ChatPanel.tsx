@@ -61,6 +61,9 @@ export function ChatInput({
       <button
         type="button"
         onClick={send}
+        // Как в мессенджерах: нажатие не забирает фокус у поля, клавиатура не закрывается.
+        onPointerDown={(e) => e.preventDefault()}
+        onMouseDown={(e) => e.preventDefault()}
         disabled={!hasText}
         aria-label="Отправить"
         title="Отправить (Enter)"

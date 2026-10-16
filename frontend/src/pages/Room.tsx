@@ -167,7 +167,10 @@ function RoomView({
   const chatInputRef = useRef<HTMLTextAreaElement>(null)
   // Свой «полный экран» для телефонов, где браузер не умеет разворачивать что-либо кроме голого видео (iPhone).
   const [pseudoFs, setPseudoFs] = useState(false)
+  // Телефон с открытой клавиатурой: прячем шапку и панель голоса, чтобы поле ввода было видно.
+  const [kbOpen, setKbOpen] = useState(false)
   const fullscreen = isFullscreen || pseudoFs
+  const [fsChatOpen, setFsChatOpen] = useState(false)
 
   const me = state.members.find((m) => m.id === state.you)
   const canControl = !!state.room && (state.room.control_mode === 'everyone' || me?.role === 'host' || me?.role === 'mod')
@@ -216,6 +219,34 @@ function RoomView({
     }
   }, [])
 
+  // Высота видимой области: на iPhone клавиатура не сжимает страницу — подстраиваемся сами.
+  useEffect(() => {
+    const vv = window.visualViewport
+    let tallest = 0
+    const apply = () => {
+      const h = vv ? vv.height : window.innerHeight
+      tallest = Math.max(tallest, h)
+      const el = document.activeElement
+      const typing = !!el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT')
+      setKbOpen(typing && window.matchMedia('(pointer: coarse)').matches && h < tallest * 0.8)
+      document.documentElement.style.setProperty('--app-h', `${Math.round(h)}px`)
+      if (vv && vv.offsetTop > 0) window.scrollTo(0, 0) // iOS сдвигает страницу при фокусе — возвращаем
+    }
+    apply()
+    vv?.addEventListener('resize', apply)
+    vv?.addEventListener('scroll', apply)
+    window.addEventListener('resize', apply)
+    document.addEventListener('focusin', apply)
+    document.addEventListener('focusout', () => window.setTimeout(apply, 50))
+    return () => {
+      document.removeEventListener('focusin', apply)
+      vv?.removeEventListener('resize', apply)
+      vv?.removeEventListener('scroll', apply)
+      window.removeEventListener('resize', apply)
+      document.documentElement.style.removeProperty('--app-h')
+    }
+  }, [])
+
   // Пока открыт свой полноэкранный режим — страница под ним не прокручивается.
   useEffect(() => {
     if (!pseudoFs) return
@@ -239,7 +270,8 @@ function RoomView({
       else doc.webkitExitFullscreen?.()
       return
     }
-    const request = el.requestFullscreen ?? el.webkitRequestFullscreen
+    const touch = window.matchMedia('(pointer: coarse)').matches
+    const request = touch ? undefined : el.requestFullscreen ?? el.webkitRequestFullscreen
     if (request) {
       try {
         await request.call(el)
@@ -377,9 +409,9 @@ function RoomView({
   )
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex flex-col max-lg:app-height max-lg:fixed max-lg:inset-x-0 max-lg:top-0 max-lg:overflow-hidden lg:min-h-dvh">
       <Ambient />
-      <header className="glass sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.06] px-4">
+      <header className={`glass sticky top-0 z-40 flex h-12 shrink-0 sm:h-14 ${kbOpen ? 'max-lg:hidden' : ''} items-center gap-3 border-b border-white/[0.06] px-4`}>
         <Logo className="shrink-0 [&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
         <div className="mx-1 h-5 w-px bg-white/10" />
         <h1 className="min-w-0 truncate font-semibold">{state.room?.name ?? '…'}</h1>
@@ -395,12 +427,14 @@ function RoomView({
         </div>
       )}
 
-      <div className={`mx-auto grid w-full max-w-[1800px] flex-1 gap-4 sm:p-4 ${theater ? '' : 'lg:grid-cols-[minmax(0,1fr)_370px]'}`}>
-        <section className="min-w-0">
+      <div
+        className={`mx-auto flex min-h-0 w-full max-w-[1800px] flex-1 flex-col lg:grid lg:gap-4 lg:p-4 ${theater ? '' : 'lg:grid-cols-[minmax(0,1fr)_370px]'}`}
+      >
+        <section className="min-w-0 shrink-0">
           <div
             className={
               pseudoFs
-                ? 'fixed inset-0 z-[80] flex h-[100dvh] w-screen items-stretch bg-black'
+                ? 'app-height fixed inset-x-0 top-0 z-[80] flex w-screen items-stretch bg-black'
                 : 'overflow-hidden ring-1 ring-white/[0.08] sm:rounded-2xl sm:shadow-[0_24px_70px_-24px_rgba(61,107,255,0.55)]'
             }
           >
@@ -415,7 +449,8 @@ function RoomView({
                 floating={state.floating}
                 stageRef={stageRef}
                 isFullscreen={fullscreen}
-                chatSlot={<FsChat messages={state.messages} you={state.you} onSend={(body) => send({ type: 'chat.send', body })} />}
+                chatSlot={<FsChat messages={state.messages} you={state.you} onSend={(body) => send({ type: 'chat.send', body })} onOpenChange={setFsChatOpen} />}
+                videoTop={fullscreen && fsChatOpen}
                 onUnlock={unlock}
                 onVolume={(v) => {
                   setVolume(v)
@@ -453,17 +488,18 @@ function RoomView({
               onNext={() => send({ type: 'playback.next' })}
               stageRef={stageRef}
               isFullscreen={fullscreen}
-                chatSlot={<FsChat messages={state.messages} you={state.you} onSend={(body) => send({ type: 'chat.send', body })} />}
+                chatSlot={<FsChat messages={state.messages} you={state.you} onSend={(body) => send({ type: 'chat.send', body })} onOpenChange={setFsChatOpen} />}
+                videoTop={fullscreen && fsChatOpen}
               onFullscreen={toggleFullscreen}
               bottomSlot={voiceBar(true)}
             />
             )}
           </div>
-          <div className="px-4 py-3 sm:px-0">{voiceBar(false)}</div>
+          <div className={`px-3 py-2 lg:px-0 lg:py-3 ${kbOpen ? "max-lg:hidden" : ""}`}>{voiceBar(false)}</div>
         </section>
 
         <aside
-          className={`flex h-[65dvh] min-h-[420px] flex-col overflow-hidden border-white/[0.07] bg-surface/70 backdrop-blur-xl sm:rounded-2xl sm:border lg:sticky lg:top-4 lg:h-[calc(100dvh-5.5rem)] ${theater ? 'lg:hidden' : ''}`}
+          className={`flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/[0.07] bg-surface/70 backdrop-blur-xl lg:sticky lg:top-4 lg:h-[calc(100dvh-5.5rem)] lg:flex-none lg:rounded-2xl lg:border ${theater ? 'lg:hidden' : ''}`}
         >
           <div className="flex shrink-0 gap-1 border-b border-white/5 p-1.5" role="tablist">
             {tabs.map((t) => (

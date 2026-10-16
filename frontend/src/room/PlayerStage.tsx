@@ -45,6 +45,8 @@ interface Props {
   bottomSlot?: ReactNode
   /** Чат поверх видео в полноэкранном режиме */
   chatSlot?: ReactNode
+  /** Вертикальный полный экран с открытым чатом: видео поднимается в верхнюю половину */
+  videoTop?: boolean
 }
 
 function mediaKey(m: Media | null | undefined): string {
@@ -141,7 +143,7 @@ export function PlayerStage(props: Props) {
       onTouchStart={poke}
       className={`group/stage relative w-full overflow-hidden bg-black ${props.isFullscreen ? 'h-full' : 'aspect-video'} ${!showControls ? 'cursor-none' : ''}`}
     >
-      <div ref={hostRef} className="absolute inset-0 [&>*]:h-full [&>*]:w-full" />
+      <div ref={hostRef} className={`absolute inset-0 transition-all duration-300 [&>*]:h-full [&>*]:w-full ${props.videoTop ? 'max-sm:bottom-[52%]' : ''}`} />
 
       {/* Перехват кликов: управление идёт через синхронизацию, а не напрямую в плеер. */}
       {media && !error && !warning && (
@@ -228,7 +230,7 @@ export function PlayerStage(props: Props) {
 
       {/* Загрузка */}
       {media && media.source !== 'external' && !ready && !error && !warning && !locked && (
-        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+        <div className={`pointer-events-none absolute inset-0 z-20 flex items-center justify-center ${props.videoTop ? 'max-sm:bottom-[52%]' : ''}`}>
           <Spinner size={36} />
         </div>
       )}
@@ -262,7 +264,7 @@ export function PlayerStage(props: Props) {
 
       {/* Большая кнопка на паузе */}
       {media && ready && !playing && !locked && !error && (
-        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+        <div className={`pointer-events-none absolute inset-0 z-20 flex items-center justify-center ${props.videoTop ? 'max-sm:bottom-[52%]' : ''}`}>
           <span className="pop-in flex h-20 w-20 items-center justify-center rounded-full bg-white/10 text-white shadow-[0_0_50px_rgba(91,110,255,0.45)] ring-1 ring-white/20 backdrop-blur-md">
             <PlayIcon size={34} className="ml-1" />
           </span>

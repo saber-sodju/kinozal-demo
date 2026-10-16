@@ -11,12 +11,18 @@ export function FsChat({
   messages,
   you,
   onSend,
+  onOpenChange,
 }: {
   messages: ChatMessage[]
   you: string | null
   onSend: (body: string) => boolean
+  onOpenChange?: (open: boolean) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpenState] = useState(false)
+  const setOpen = (v: boolean) => {
+    setOpenState(v)
+    onOpenChange?.(v)
+  }
   const [seen, setSeen] = useState(messages.length)
   const [toasts, setToasts] = useState<ChatMessage[]>([])
   const last = messages[messages.length - 1]
@@ -71,7 +77,7 @@ export function FsChat({
       )}
 
       {open && (
-        <div className="pop-in absolute bottom-24 right-2 top-2 z-40 flex w-[min(22rem,calc(100%-1rem))] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#07070f]/70 text-white shadow-2xl backdrop-blur-xl sm:right-4 sm:top-4">
+        <div className="pop-in absolute z-40 flex flex-col overflow-hidden border border-white/10 bg-[#07070f]/75 text-white shadow-2xl backdrop-blur-xl max-sm:inset-x-0 max-sm:bottom-0 max-sm:h-[52%] max-sm:rounded-t-3xl sm:bottom-20 sm:right-4 sm:top-4 sm:w-[min(22rem,calc(100%-2rem))] sm:rounded-3xl">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
             <span className="flex items-center gap-2 text-sm font-semibold">
               <ChatIcon size={17} /> Чат

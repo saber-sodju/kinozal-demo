@@ -21,6 +21,7 @@ export function ScreenStage({
   onFullscreen,
   bottomSlot,
   chatSlot,
+  videoTop = false,
 }: {
   screen: ScreenShare
   canStop: boolean
@@ -37,6 +38,7 @@ export function ScreenStage({
   onFullscreen: () => void
   bottomSlot?: ReactNode
   chatSlot?: ReactNode
+  videoTop?: boolean
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [waitedLong, setWaitedLong] = useState(false)
@@ -98,7 +100,7 @@ export function ScreenStage({
 
   return (
     <div ref={stageRef} className={`relative w-full overflow-hidden bg-black ${isFullscreen ? 'h-full' : 'aspect-video'}`}>
-      <video ref={videoRef} playsInline muted={screen.sharing} className="absolute inset-0 h-full w-full bg-black object-contain" />
+      <video ref={videoRef} playsInline muted={screen.sharing} className={`absolute inset-0 h-full w-full bg-black object-contain transition-all duration-300 ${videoTop ? 'max-sm:h-[48%]' : ''}`} />
 
       <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden" aria-hidden>
         {floating.map((r) => (

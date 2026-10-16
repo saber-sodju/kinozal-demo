@@ -39,6 +39,16 @@
 @utility bg-gradient-soft {
   background-image: linear-gradient(135deg, rgba(56, 200, 255, 0.16), rgba(61, 107, 255, 0.12) 45%, rgba(168, 85, 247, 0.16));
 }
+/* Высота видимой области (уменьшается, когда открыта клавиатура) — задаётся из JS */
+@utility app-height {
+  height: var(--app-h, 100dvh);
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
 @utility glass {
   background-color: rgba(14, 15, 28, 0.62);
   backdrop-filter: blur(18px) saturate(140%);
@@ -63,15 +73,24 @@ h1, h2, h3 {
   letter-spacing: -0.02em;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-  border-radius: 6px;
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
 }
 
 ::selection {
   background: rgba(110, 139, 255, 0.4);
 }
+
+@media (pointer: coarse) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 
 button, a, [role="button"], summary, label[for] {
   cursor: pointer;

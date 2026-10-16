@@ -177,6 +177,8 @@ export class VkPlayer implements PlayerAdapter {
 
   setVolume(volume: number): void {
     this.player?.setVolume(Math.min(1, Math.max(0, volume)))
+    if (volume > 0) this.player?.unmute()
+    else this.player?.mute()
   }
 
   destroy(): void {

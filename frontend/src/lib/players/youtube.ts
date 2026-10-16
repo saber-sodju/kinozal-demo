@@ -139,6 +139,9 @@ export class YouTubePlayer implements PlayerAdapter {
 
   setVolume(volume: number): void {
     this.player?.setVolume?.(Math.round(volume * 100))
+    // setVolume не снимает «без звука», если браузер запустил видео приглушённым
+    if (volume > 0) this.player?.unMute?.()
+    else this.player?.mute?.()
   }
 
   destroy(): void {

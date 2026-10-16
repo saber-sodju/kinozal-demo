@@ -28,6 +28,8 @@ export class VoiceManager extends Emitter {
   private localAnalyser: AnalyserNode | null = null
   private levelTimer = 0
   private speaking = new Set<string>()
+  /** Браузер не дал включить звук собеседников без нажатия. */
+  audioBlocked = false
   private selfId = ''
   private pttHeld = false
   pushToTalk = false
@@ -108,6 +110,14 @@ export class VoiceManager extends Emitter {
 
   isTransmitting(): boolean {
     return this.joined && !this.effectiveMuted()
+  }
+
+  /** Включить звук собеседников по нажатию (обход ограничений автозапуска). */
+  resumeAudio(): void {
+    void this.ctx?.resume().catch(() => {})
+    for (const peer of this.peers.values()) void peer.audio.play().catch(() => {})
+    this.audioBlocked = false
+    this.emit('change')
   }
 
   setPeerVolume(id: string, volume: number): void {
@@ -221,7 +231,10 @@ export class VoiceManager extends Emitter {
     pc.ontrack = (e) => {
       const [remote] = e.streams
       audio.srcObject = remote
-      void audio.play().catch(() => {})
+      audio.play().catch(() => {
+        this.audioBlocked = true
+        this.emit('change')
+      })
       peer.analyser = this.makeAnalyser(remote)
     }
     pc.onconnectionstatechange = () => {

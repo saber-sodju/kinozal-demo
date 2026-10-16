@@ -148,6 +148,18 @@ export function ScreenStage({
         </button>
       )}
 
+      {screen.sharing && !screen.hasAudio() && (
+        <div className="absolute inset-x-3 top-12 z-30 rounded-xl border border-[#f5b544]/40 bg-black/80 p-3 text-sm backdrop-blur">
+          🔇 <b>Друзья не слышат звук.</b> Нажми «Остановить показ», снова «Показать вкладку», выбери вкладку <b>«Вкладка Chrome»</b> и
+          включи галочку <b>«Поделиться звуком на вкладке»</b>. Если показываешь весь экран — включи «Поделиться системным звуком».
+        </div>
+      )}
+      {!screen.sharing && stream && stream.getAudioTracks().length === 0 && (
+        <div className="pointer-events-none absolute inset-x-3 top-12 z-30 rounded-xl bg-black/75 p-2.5 text-center text-xs backdrop-blur">
+          🔇 {screen.sharerName || 'Показывающий'} не включил звук вкладки — попроси его перезапустить показ с галочкой «Поделиться звуком».
+        </div>
+      )}
+
       <div className="pointer-events-none absolute left-3 top-3 z-30 flex items-center gap-2 rounded-xl bg-black/60 px-3 py-1.5 text-xs backdrop-blur">
         <span className="live-dot h-2 w-2 rounded-full bg-danger" />
         <ScreenIcon size={14} /> {who}
@@ -173,9 +185,7 @@ export function ScreenStage({
               />
             </div>
           )}
-          {screen.sharing && !screen.hasAudio() && (
-            <span className="text-xs text-accent">Звук не передаётся — при выборе вкладки включи «Поделиться звуком»</span>
-          )}
+
           <div className="ml-auto flex items-center gap-1">
             {canStop && (
               <button

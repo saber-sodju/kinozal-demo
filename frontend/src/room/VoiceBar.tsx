@@ -48,6 +48,14 @@ export function VoiceBar({
       )}
 
       <div className="flex items-center gap-1.5">
+        {joined && voice?.audioBlocked && (
+          <button
+            onClick={() => voice.resumeAudio()}
+            className="btn-press inline-flex h-10 items-center gap-2 rounded-xl bg-[#f5b544]/15 px-3 text-sm font-semibold text-[#ffd27a] hover:bg-[#f5b544]/25"
+          >
+            🔊 Включить звук голоса
+          </button>
+        )}
         {joined ? (
           <>
             <button

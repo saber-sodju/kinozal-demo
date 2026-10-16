@@ -63,6 +63,7 @@ export function PlayerStage(props: Props) {
   const [drag, setDrag] = useState<number | null>(null)
   const [idle, setIdle] = useState(false)
   const idleTimer = useRef(0)
+  const volumeRef = useRef(1)
 
   // Монтируем адаптер плеера при смене видео.
   useEffect(() => {
@@ -80,6 +81,8 @@ export function PlayerStage(props: Props) {
         setWarning('')
       }
       if (e.type === 'warning') setWarning(e.message)
+      // Браузер или плеер мог стартовать без звука — каждый раз при запуске возвращаем громкость.
+      if (e.type === 'playing') player.setVolume(volumeRef.current)
       if (e.type === 'duration') setDuration(e.duration)
       if (e.type === 'error') setError(e.message)
     })
@@ -96,6 +99,7 @@ export function PlayerStage(props: Props) {
 
   // Громкость фильма (с приглушением во время речи).
   const effectiveVolume = props.movieMuted ? 0 : props.volume * (props.ducked ? 0.3 : 1)
+  volumeRef.current = effectiveVolume
   useEffect(() => {
     if (ready) playerRef.current?.setVolume(effectiveVolume)
   }, [effectiveVolume, ready])

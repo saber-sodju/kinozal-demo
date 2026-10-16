@@ -119,6 +119,7 @@ class Room:
         self.ended_version = -1
         self.wait_task: asyncio.Task | None = None
         self.empty_since: float | None = time.monotonic()
+        self.screen: dict | None = None  # кто сейчас показывает вкладку: {"by", "name"}
         self.lock = asyncio.Lock()
 
     # ---------- сериализация ----------
@@ -130,6 +131,7 @@ class Room:
             "control_mode": self.control_mode,
             "wait_for_all": self.wait_for_all,
             "host_id": self.host_id,
+            "screen": self.screen,
         }
 
     def save(self) -> None:
@@ -463,6 +465,42 @@ class Room:
             return
         await self.broadcast_presence()
 
+    # ---------- демонстрация вкладки (видео идёт P2P от показывающего) ----------
+
+    async def screen_action(self, m: Member, msg: dict) -> None:
+        kind = msg["type"]
+        if kind == "screen.start":
+            if self.screen and self.screen["by"] != m.id and m.role not in ("host", "mod"):
+                return await self.error(m, f"Сейчас показывает {self.screen['name']}. Дождись, пока он закончит.")
+            previous = self.screen
+            self.screen = {"by": m.id, "name": m.name}
+            if previous and previous["by"] != m.id:
+                await self.broadcast({"type": "screen.stopped", "by": previous["by"]})
+            pb = self.playback
+            if pb.media and pb.status == "playing":
+                pb.position = pb.current_position()
+                pb.status = "paused"
+                self._bump(m.id)
+                await self.broadcast_playback()
+            await self.broadcast_presence()
+            await self.system_message(f"{m.name} показывает вкладку")
+        elif kind == "screen.stop":
+            if not self.screen or (self.screen["by"] != m.id and not self.can_moderate(m)):
+                return
+            await self.stop_screen()
+        elif kind == "screen.signal":
+            target = self.members.get(msg.get("to", ""))
+            if target and target.connected:
+                await self.send(target, {"type": "screen.signal", "from": m.id, "data": msg.get("data")})
+
+    async def stop_screen(self) -> None:
+        if not self.screen:
+            return
+        by = self.screen["by"]
+        self.screen = None
+        await self.broadcast({"type": "screen.stopped", "by": by})
+        await self.broadcast_presence()
+
     async def profile(self, m: Member, msg: dict) -> None:
         name = str(msg.get("name", "")).strip()[:32]
         color = msg.get("color")
@@ -546,6 +584,8 @@ class RoomManager:
             if member.in_voice:
                 member.in_voice = False
                 await room.broadcast({"type": "voice.left", "id": member.id})
+            if room.screen and room.screen["by"] == member.id:
+                await room.stop_screen()
             if room.playback.waiting and not room._anyone_loading():
                 await room._resume_after_wait()
             await room.broadcast_presence()
@@ -585,6 +625,8 @@ class RoomManager:
                 await room.voice(member, msg)
             elif kind == "profile.update":
                 await room.profile(member, msg)
+            elif kind in ("screen.start", "screen.stop", "screen.signal"):
+                await room.screen_action(member, msg)
 
     async def cleanup_loop(self) -> None:
         while True:

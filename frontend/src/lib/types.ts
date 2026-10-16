@@ -52,6 +52,7 @@ export interface RoomInfo {
   control_mode: 'everyone' | 'host_only'
   wait_for_all: boolean
   host_id: string
+  screen?: { by: string; name: string } | null
 }
 
 export interface ChatMessage {

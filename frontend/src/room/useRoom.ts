@@ -3,6 +3,7 @@ import { useToast } from '../components/Toasts'
 import { RoomClient, type ConnectionStatus, type FatalReason } from '../lib/roomClient'
 import { SyncController, type SyncHealth } from '../lib/sync'
 import type { ChatMessage, Media, Member, Playback, RoomInfo } from '../lib/types'
+import { ScreenShare } from '../lib/screen'
 import { VoiceManager } from '../lib/voice'
 
 export interface FloatingReaction {
@@ -54,6 +55,7 @@ export function useRoom(slug: string, enabled: boolean, startUnlocked: boolean) 
   const clientRef = useRef<RoomClient | null>(null)
   const syncRef = useRef<SyncController | null>(null)
   const voiceRef = useRef<VoiceManager | null>(null)
+  const screenRef = useRef<ScreenShare | null>(null)
   const toast = useToast()
   const [attempt, setAttempt] = useState(0)
 
@@ -66,9 +68,13 @@ export function useRoom(slug: string, enabled: boolean, startUnlocked: boolean) 
     const client = new RoomClient(slug)
     const sync = new SyncController(client)
     const voice = new VoiceManager(client, [])
+    const screen = new ScreenShare(client)
     clientRef.current = client
     syncRef.current = sync
     voiceRef.current = voice
+    screenRef.current = screen
+    const syncScreen = (room: RoomInfo, members: Member[]) =>
+      screen.onRoomScreen(room?.screen ?? null, members.filter((x) => x.connected).map((x) => x.id))
     setState({ ...INITIAL, locked: !startUnlocked })
     if (startUnlocked) sync.unlock()
 
@@ -76,6 +82,9 @@ export function useRoom(slug: string, enabled: boolean, startUnlocked: boolean) 
       client.on('welcome', (m) => {
         voice.setSelf(m.you)
         voice.setIceServers(m.ice_servers)
+        screen.setSelf(m.you)
+        screen.setIceServers(m.ice_servers)
+        syncScreen(m.room, m.members)
         sync.setState(m.playback)
         patch((s) => {
           const known = new Set(s.messages.map((x) => x.id))
@@ -92,7 +101,10 @@ export function useRoom(slug: string, enabled: boolean, startUnlocked: boolean) 
           }
         })
       }),
-      client.on('presence', (m) => patch({ members: m.members, room: m.room })),
+      client.on('presence', (m) => {
+        syncScreen(m.room, m.members)
+        patch({ members: m.members, room: m.room })
+      }),
       client.on('playback.state', (m) => {
         sync.setState(m.playback)
         patch({ playback: m.playback })
@@ -114,6 +126,8 @@ export function useRoom(slug: string, enabled: boolean, startUnlocked: boolean) 
       sync.on('blocked', () => patch({ locked: true })),
       voice.on('speaking', (set: Set<string>) => patch({ speaking: set })),
       voice.on('change', () => setVoiceTick((t) => t + 1)),
+      screen.on('change', () => setVoiceTick((t) => t + 1)),
+      screen.on('failed', () => toast('Не удалось подключиться к трансляции: сеть блокирует прямое соединение.', 'error')),
       voice.on('peer-failed', () =>
         toast('Голосовое соединение не установилось: сеть блокирует прямое подключение. Нужен TURN-сервер.', 'error'),
       ),
@@ -122,12 +136,14 @@ export function useRoom(slug: string, enabled: boolean, startUnlocked: boolean) 
 
     return () => {
       offs.forEach((off) => off())
+      screen.destroy()
       voice.destroy()
       sync.destroy()
       client.close()
       clientRef.current = null
       syncRef.current = null
       voiceRef.current = null
+      screenRef.current = null
     }
     // startUnlocked читаем только при подключении
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,5 +162,5 @@ export function useRoom(slug: string, enabled: boolean, startUnlocked: boolean) 
 
   const reconnect = useCallback(() => setAttempt((a) => a + 1), [])
 
-  return { state, send, reconnect, unlock, sync: syncRef, voice: voiceRef, voiceTick }
+  return { state, send, reconnect, unlock, sync: syncRef, voice: voiceRef, screen: screenRef, voiceTick }
 }

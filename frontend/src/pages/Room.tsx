@@ -14,6 +14,8 @@ import type { ChatMessage, RoomInfo, Session } from '../lib/types'
 import { ChatPanel } from '../room/ChatPanel'
 import { PeoplePanel } from '../room/PeoplePanel'
 import { PlayerStage } from '../room/PlayerStage'
+import { ScreenStage } from '../room/ScreenStage'
+import { ScreenShare } from '../lib/screen'
 import { QueuePanel } from '../room/QueuePanel'
 import { useRoom } from '../room/useRoom'
 import { VoiceBar } from '../room/VoiceBar'
@@ -148,7 +150,7 @@ function RoomView({
   onInviteShown: () => void
   onSessionLost: () => void
 }) {
-  const { state, send, reconnect, unlock, sync, voice, voiceTick } = useRoom(slug, true, startUnlocked)
+  const { state, send, reconnect, unlock, sync, voice, screen, voiceTick } = useRoom(slug, true, startUnlocked)
   const toast = useToast()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('chat')
@@ -293,6 +295,25 @@ function RoomView({
     { id: 'queue', label: 'Очередь', icon: ListIcon, badge: state.queue.length },
   ]
 
+  const screenOn = !!state.room?.screen
+  const canShare = ScreenShare.supported()
+  const sharing = screen.current?.sharing ?? false
+
+  async function toggleShare() {
+    const sc = screen.current
+    if (!sc) return
+    if (sc.sharing) {
+      sc.stop()
+      return
+    }
+    try {
+      await sc.start()
+      toast('Показываешь вкладку. Если звука нет — выбери «Вкладку Chrome» и включи «Поделиться звуком».', 'ok')
+    } catch (err) {
+      if ((err as DOMException).name !== 'NotAllowedError') toast('Не удалось начать показ вкладки.', 'error')
+    }
+  }
+
   const voiceBar = (compact: boolean) => (
     <VoiceBar
       members={state.members}
@@ -302,6 +323,8 @@ function RoomView({
       onReact={(emoji) => send({ type: 'reaction', emoji })}
       onJoinVoice={joinVoice}
       onInvite={() => setInvite(true)}
+      sharing={sharing}
+      onShareScreen={canShare ? toggleShare : undefined}
       compact={compact}
     />
   )
@@ -328,6 +351,28 @@ function RoomView({
       <div className={`mx-auto grid w-full max-w-[1800px] flex-1 gap-4 sm:p-4 ${theater ? '' : 'lg:grid-cols-[minmax(0,1fr)_370px]'}`}>
         <section className="min-w-0">
           <div className="overflow-hidden ring-1 ring-white/[0.08] sm:rounded-2xl sm:shadow-[0_24px_70px_-24px_rgba(61,107,255,0.55)]">
+            {screenOn && screen.current ? (
+              <ScreenStage
+                screen={screen.current}
+                canStop={sharing || me?.role === 'host' || me?.role === 'mod'}
+                volume={volume}
+                movieMuted={movieMuted}
+                ducked={ducked}
+                locked={state.locked}
+                floating={state.floating}
+                stageRef={stageRef}
+                isFullscreen={isFullscreen}
+                onUnlock={unlock}
+                onVolume={(v) => {
+                  setVolume(v)
+                  setMovieMuted(false)
+                  savePrefs({ volume: v })
+                }}
+                onToggleMute={() => setMovieMuted((m) => !m)}
+                onFullscreen={toggleFullscreen}
+                bottomSlot={voiceBar(true)}
+              />
+            ) : (
             <PlayerStage
               sync={sync.current}
               playback={state.playback}
@@ -350,12 +395,14 @@ function RoomView({
               onToggleMute={() => setMovieMuted((m) => !m)}
               onTheater={() => setTheater((t) => !t)}
               onPickMedia={() => setAdding(true)}
+              onShareScreen={canShare ? toggleShare : undefined}
               onNext={() => send({ type: 'playback.next' })}
               stageRef={stageRef}
               isFullscreen={isFullscreen}
               onFullscreen={toggleFullscreen}
               bottomSlot={voiceBar(true)}
             />
+            )}
           </div>
           <div className="px-4 py-3 sm:px-0">{voiceBar(false)}</div>
         </section>

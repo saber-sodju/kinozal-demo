@@ -1,4 +1,4 @@
-import { HeadphonesIcon, LinkIcon, MicIcon, MicOffIcon, PhoneOffIcon } from '../components/Icons'
+import { HeadphonesIcon, LinkIcon, MicIcon, MicOffIcon, PhoneOffIcon, ScreenIcon } from '../components/Icons'
 import { Avatar } from '../components/ui'
 import type { Member } from '../lib/types'
 import type { VoiceManager } from '../lib/voice'
@@ -11,6 +11,8 @@ export function VoiceBar({
   onReact,
   onJoinVoice,
   onInvite,
+  sharing = false,
+  onShareScreen,
   compact = false,
 }: {
   members: Member[]
@@ -20,6 +22,8 @@ export function VoiceBar({
   onReact: (emoji: string) => void
   onJoinVoice: () => void
   onInvite?: () => void
+  sharing?: boolean
+  onShareScreen?: () => void
   compact?: boolean
 }) {
   const joined = voice?.joined ?? false
@@ -82,6 +86,18 @@ export function VoiceBar({
           </button>
         ))}
       </div>
+
+      {onShareScreen && (
+        <button
+          onClick={onShareScreen}
+          className={`btn-press inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold transition ${
+            sharing ? 'bg-danger/15 text-danger hover:bg-danger/25' : 'bg-surface-2 hover:bg-surface-3'
+          }`}
+          title="Показать вкладку с любого сайта — как в Discord"
+        >
+          <ScreenIcon size={18} /> <span className="hidden sm:inline">{sharing ? 'Остановить показ' : 'Показать вкладку'}</span>
+        </button>
+      )}
 
       {onInvite && !compact && (
         <button onClick={onInvite} className="btn-press btn-sheen glow-brand bg-brand ml-auto inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-white">

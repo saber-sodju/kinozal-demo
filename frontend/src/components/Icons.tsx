@@ -50,6 +50,9 @@ export const HeadphonesIcon = (p: P) => (
 export const PhoneOffIcon = (p: P) => (
   <svg {...base(p)}><path d="M3.5 14.5c4.7-4.2 12.3-4.2 17 0l-1.8 2.6-3.4-1.3-.4-2.5a11 11 0 0 0-5.8 0l-.4 2.5-3.4 1.3z" fill="currentColor" /></svg>
 )
+export const ScreenIcon = (p: P) => (
+  <svg {...base(p)}><rect x="2.5" y="4" width="19" height="13" rx="2" /><path d="M8 21h8M12 17v4" /><path d="m10 8.5 4 2-4 2z" fill="currentColor" /></svg>
+)
 export const ExpandIcon = (p: P) => (
   <svg {...base(p)}><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
 )

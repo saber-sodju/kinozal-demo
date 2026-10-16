@@ -37,6 +37,7 @@ interface Props {
   onToggleMute: () => void
   onTheater: () => void
   onPickMedia: () => void
+  onShareScreen?: () => void
   onNext: () => void
   stageRef: React.RefObject<HTMLDivElement | null>
   isFullscreen: boolean
@@ -166,12 +167,24 @@ export function PlayerStage(props: Props) {
         <div className="film-grain absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 p-6 text-center">
           <FilmIcon size={44} className="text-accent/70" />
           <p className="font-display text-2xl font-bold">Что смотрим?</p>
-          <p className="max-w-sm text-sm text-muted">{canControl ? 'Выбери фильм из каталога или вставь ссылку.' : 'Ведущий скоро что-нибудь включит.'}</p>
-          {canControl && (
-            <button onClick={props.onPickMedia} className="btn-press btn-sheen glow-brand bg-brand mt-1 h-11 rounded-xl px-5 font-semibold text-white">
-              Выбрать видео
-            </button>
-          )}
+          <p className="max-w-sm text-sm text-muted">
+            {canControl ? 'Найди фильм, вставь ссылку — или покажи вкладку с любого сайта.' : 'Ведущий скоро что-нибудь включит.'}
+          </p>
+          <div className="mt-1 flex flex-wrap justify-center gap-2">
+            {canControl && (
+              <button onClick={props.onPickMedia} className="btn-press btn-sheen glow-brand bg-brand h-11 rounded-xl px-5 font-semibold text-white">
+                Выбрать видео
+              </button>
+            )}
+            {props.onShareScreen && (
+              <button
+                onClick={props.onShareScreen}
+                className="btn-press h-11 rounded-xl border border-white/10 bg-white/[0.06] px-5 font-semibold backdrop-blur hover:bg-white/10"
+              >
+                Показать вкладку
+              </button>
+            )}
+          </div>
         </div>
       )}
 

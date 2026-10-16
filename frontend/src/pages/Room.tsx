@@ -12,6 +12,7 @@ import { api, verifySession } from '../lib/api'
 import { loadPrefs, PTT_KEY, savePrefs } from '../lib/settings'
 import type { ChatMessage, RoomInfo, Session } from '../lib/types'
 import { ChatPanel } from '../room/ChatPanel'
+import { FsChat } from '../room/FsChat'
 import { PeoplePanel } from '../room/PeoplePanel'
 import { PlayerStage } from '../room/PlayerStage'
 import { ScreenStage } from '../room/ScreenStage'
@@ -163,7 +164,10 @@ function RoomView({
   const [overlay, setOverlay] = useState<ChatMessage[]>([])
   const [seenCount, setSeenCount] = useState(0)
   const stageRef = useRef<HTMLDivElement>(null)
-  const chatInputRef = useRef<HTMLInputElement>(null)
+  const chatInputRef = useRef<HTMLTextAreaElement>(null)
+  // Свой «полный экран» для телефонов, где браузер не умеет разворачивать что-либо кроме голого видео (iPhone).
+  const [pseudoFs, setPseudoFs] = useState(false)
+  const fullscreen = isFullscreen || pseudoFs
 
   const me = state.members.find((m) => m.id === state.you)
   const canControl = !!state.room && (state.room.control_mode === 'everyone' || me?.role === 'host' || me?.role === 'mod')
@@ -199,17 +203,56 @@ function RoomView({
   }, [lastMessage])
 
   useEffect(() => {
-    const onFs = () => setIsFullscreen(document.fullscreenElement === stageRef.current)
+    const doc = document as Document & { webkitFullscreenElement?: Element | null }
+    const onFs = () => {
+      const el = document.fullscreenElement ?? doc.webkitFullscreenElement ?? null
+      setIsFullscreen(!!el && el === stageRef.current)
+    }
     document.addEventListener('fullscreenchange', onFs)
-    return () => document.removeEventListener('fullscreenchange', onFs)
+    document.addEventListener('webkitfullscreenchange', onFs)
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs)
+      document.removeEventListener('webkitfullscreenchange', onFs)
+    }
   }, [])
 
-  const toggleFullscreen = useCallback(() => {
-    const el = stageRef.current
+  // Пока открыт свой полноэкранный режим — страница под ним не прокручивается.
+  useEffect(() => {
+    if (!pseudoFs) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [pseudoFs])
+
+  const toggleFullscreen = useCallback(async () => {
+    const el = stageRef.current as (HTMLDivElement & { webkitRequestFullscreen?: () => Promise<void> | void }) | null
+    const doc = document as Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => void }
     if (!el) return
-    if (document.fullscreenElement) void document.exitFullscreen()
-    else void el.requestFullscreen?.().catch(() => toast('Полноэкранный режим недоступен в этом браузере.', 'error'))
-  }, [toast])
+    if (pseudoFs) {
+      setPseudoFs(false)
+      return
+    }
+    if (document.fullscreenElement || doc.webkitFullscreenElement) {
+      if (document.exitFullscreen) void document.exitFullscreen().catch(() => {})
+      else doc.webkitExitFullscreen?.()
+      return
+    }
+    const request = el.requestFullscreen ?? el.webkitRequestFullscreen
+    if (request) {
+      try {
+        await request.call(el)
+        // На Android разворачиваем в горизонталь, если браузер позволяет.
+        const orientation = window.screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }
+        await orientation?.lock?.('landscape').catch(() => {})
+        return
+      } catch {
+        /* не получилось — используем свой режим */
+      }
+    }
+    setPseudoFs(true)
+  }, [pseudoFs])
 
   const joinVoice = useCallback(async () => {
     const v = voice.current
@@ -238,6 +281,10 @@ function RoomView({
   // Горячие клавиши.
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && pseudoFs) {
+        setPseudoFs(false)
+        return
+      }
       if (isTyping(e) || e.ctrlKey || e.metaKey || e.altKey) return
       const s = sync.current
       if (e.code === PTT_KEY && voice.current?.joined && voice.current.pushToTalk) {
@@ -268,7 +315,7 @@ function RoomView({
       window.removeEventListener('keydown', down)
       window.removeEventListener('keyup', up)
     }
-  }, [canControl, sync, voice, toggleFullscreen])
+  }, [canControl, sync, voice, toggleFullscreen, pseudoFs])
 
   if (state.fatal && state.fatal !== 'session') {
     const texts = {
@@ -350,7 +397,13 @@ function RoomView({
 
       <div className={`mx-auto grid w-full max-w-[1800px] flex-1 gap-4 sm:p-4 ${theater ? '' : 'lg:grid-cols-[minmax(0,1fr)_370px]'}`}>
         <section className="min-w-0">
-          <div className="overflow-hidden ring-1 ring-white/[0.08] sm:rounded-2xl sm:shadow-[0_24px_70px_-24px_rgba(61,107,255,0.55)]">
+          <div
+            className={
+              pseudoFs
+                ? 'fixed inset-0 z-[80] flex h-[100dvh] w-screen items-stretch bg-black'
+                : 'overflow-hidden ring-1 ring-white/[0.08] sm:rounded-2xl sm:shadow-[0_24px_70px_-24px_rgba(61,107,255,0.55)]'
+            }
+          >
             {screenOn && screen.current ? (
               <ScreenStage
                 screen={screen.current}
@@ -361,7 +414,8 @@ function RoomView({
                 locked={state.locked}
                 floating={state.floating}
                 stageRef={stageRef}
-                isFullscreen={isFullscreen}
+                isFullscreen={fullscreen}
+                chatSlot={<FsChat messages={state.messages} you={state.you} onSend={(body) => send({ type: 'chat.send', body })} />}
                 onUnlock={unlock}
                 onVolume={(v) => {
                   setVolume(v)
@@ -385,7 +439,7 @@ function RoomView({
               floating={state.floating}
               locked={state.locked}
               theater={theater}
-              overlayMessages={isFullscreen || theater ? overlay : []}
+              overlayMessages={theater && !fullscreen ? overlay : []}
               onUnlock={unlock}
               onVolume={(v) => {
                 setVolume(v)
@@ -398,7 +452,8 @@ function RoomView({
               onShareScreen={canShare ? toggleShare : undefined}
               onNext={() => send({ type: 'playback.next' })}
               stageRef={stageRef}
-              isFullscreen={isFullscreen}
+              isFullscreen={fullscreen}
+                chatSlot={<FsChat messages={state.messages} you={state.you} onSend={(body) => send({ type: 'chat.send', body })} />}
               onFullscreen={toggleFullscreen}
               bottomSlot={voiceBar(true)}
             />

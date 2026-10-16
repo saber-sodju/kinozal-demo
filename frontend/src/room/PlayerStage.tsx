@@ -43,6 +43,8 @@ interface Props {
   isFullscreen: boolean
   onFullscreen: () => void
   bottomSlot?: ReactNode
+  /** Чат поверх видео в полноэкранном режиме */
+  chatSlot?: ReactNode
 }
 
 function mediaKey(m: Media | null | undefined): string {
@@ -253,7 +255,7 @@ export function PlayerStage(props: Props) {
 
       {/* Индикатор синхронизации */}
       {media && ready && !locked && (
-        <div className={`pointer-events-none absolute right-3 top-3 z-30 rounded-lg bg-black/55 px-2.5 py-1 text-xs backdrop-blur transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`pointer-events-none absolute top-3 z-30 rounded-lg bg-black/55 px-2.5 py-1 text-xs backdrop-blur transition-opacity ${props.isFullscreen ? 'left-3' : 'right-3'} ${showControls ? 'opacity-100' : 'opacity-0'}`}>
           {health === 'catching_up' ? <span className="text-accent">● догоняем</span> : <span className="text-ok">● синхронно</span>}
         </div>
       )}
@@ -268,7 +270,9 @@ export function PlayerStage(props: Props) {
       )}
 
       {/* Чат поверх видео в полноэкранном режиме */}
-      {props.isFullscreen && props.overlayMessages.length > 0 && (
+      {props.isFullscreen && props.chatSlot}
+
+      {!props.isFullscreen && props.overlayMessages.length > 0 && (
         <div className="pointer-events-none absolute bottom-24 left-4 z-30 flex max-w-sm flex-col gap-1.5">
           {props.overlayMessages.map((m) => (
             <div key={m.id} className="fade-in rounded-lg bg-black/65 px-3 py-1.5 text-sm backdrop-blur">

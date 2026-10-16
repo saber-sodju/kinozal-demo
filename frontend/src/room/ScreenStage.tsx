@@ -20,6 +20,7 @@ export function ScreenStage({
   onToggleMute,
   onFullscreen,
   bottomSlot,
+  chatSlot,
 }: {
   screen: ScreenShare
   canStop: boolean
@@ -35,6 +36,7 @@ export function ScreenStage({
   onToggleMute: () => void
   onFullscreen: () => void
   bottomSlot?: ReactNode
+  chatSlot?: ReactNode
 }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [waitedLong, setWaitedLong] = useState(false)
@@ -164,6 +166,8 @@ export function ScreenStage({
         <span className="live-dot h-2 w-2 rounded-full bg-danger" />
         <ScreenIcon size={14} /> {who}
       </div>
+
+      {isFullscreen && chatSlot}
 
       <div className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/85 to-transparent px-3 pb-2 pt-8 sm:px-4">
         <div className="flex items-center gap-1">

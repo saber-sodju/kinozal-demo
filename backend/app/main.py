@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -130,6 +130,39 @@ def catalog_item(media_id: int):
 async def search(request: Request, q: str = "", kind: str = "all"):
     limit(request, "search", 40, 60)
     return await search_everywhere(q[:100], kind if kind in ("all", "long", "short") else "all")
+
+
+# ---------- подключение VK (для поиска видео) ----------
+
+def _vk_page(title: str, text: str) -> HTMLResponse:
+    return HTMLResponse(
+        f"""<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{title}</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#07070f;color:#f3f4fa;font-family:system-ui">
+<div style="max-width:420px;padding:32px;border-radius:24px;background:#151729;text-align:center">
+<img src="/logo-mark.png" width="64" height="64" alt=""><h1 style="font-size:22px">{title}</h1>
+<p style="color:#a3a7c2;line-height:1.5">{text}</p><a href="/search" style="color:#7c9bff">Перейти к поиску →</a></div></body>"""
+    )
+
+
+@app.get("/api/vk/connect")
+def vk_connect(s: str = ""):
+    from . import vkauth
+
+    if not vkauth.connect_allowed(s) or not vkauth.app_id():
+        raise HTTPException(404)
+    return RedirectResponse(vkauth.authorize_url())
+
+
+@app.get("/api/vk/callback")
+async def vk_callback(code: str = "", state: str = "", device_id: str = "", error: str = "", error_description: str = ""):
+    from . import vkauth
+
+    if error or not code:
+        return _vk_page("VK не подключён", error_description or error or "VK не вернул код авторизации.")
+    ok, text = await vkauth.finish(code, state, device_id)
+    if not ok:
+        return _vk_page("VK не подключён", text)
+    return _vk_page("VK подключён ✅", "Теперь поиск на сайте и в боте ищет и в VK Видео.")
 
 
 @app.get("/api/sources")

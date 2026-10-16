@@ -102,7 +102,9 @@ async def search_youtube(q: str) -> list[dict]:
 
 
 async def search_vk(q: str) -> list[dict]:
-    token = os.environ.get("VK_TOKEN")
+    from .vkauth import access_token
+
+    token = await access_token()
     if not token:
         raise LookupError("disabled")
     params = {"q": q, "count": "30", "adult": "0", "sort": "2", "access_token": token, "v": "5.199"}

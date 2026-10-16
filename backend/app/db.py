@@ -74,6 +74,10 @@ CREATE TABLE IF NOT EXISTS reports (
     reason TEXT NOT NULL,
     created_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS kv (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS tg_files (
     token TEXT PRIMARY KEY,
     peer TEXT NOT NULL,
@@ -287,6 +291,20 @@ def recent_messages(room_slug: str, after_id: int = 0, limit: int = 80) -> list[
         }
         for r in reversed(rows)
     ]
+
+
+# ---------- Служебные настройки (ключи интеграций) ----------
+
+def get_kv(key: str) -> dict | None:
+    row = conn().execute("SELECT value FROM kv WHERE key = ?", (key,)).fetchone()
+    return json.loads(row["value"]) if row else None
+
+
+def set_kv(key: str, value: dict) -> None:
+    conn().execute(
+        "INSERT INTO kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+        (key, json.dumps(value)),
+    )
 
 
 # ---------- Видео из Telegram (через бота) ----------

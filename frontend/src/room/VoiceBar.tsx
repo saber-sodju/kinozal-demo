@@ -28,6 +28,7 @@ export function VoiceBar({
 }) {
   const joined = voice?.joined ?? false
   const online = members.filter((m) => m.connected)
+  const othersInVoice = online.filter((m) => m.in_voice)
 
   return (
     <div className={`flex flex-wrap items-center gap-x-4 gap-y-3 ${compact ? 'mt-2' : ''}`}>
@@ -75,6 +76,15 @@ export function VoiceBar({
               <PhoneOffIcon size={18} />
             </button>
           </>
+        ) : othersInVoice.length > 0 ? (
+          <button
+            onClick={onJoinVoice}
+            className="btn-press btn-sheen bg-brand glow-brand inline-flex h-10 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-white"
+          >
+            <span className="live-dot h-2 w-2 rounded-full bg-ok" />
+            <HeadphonesIcon size={18} /> Войти в голос
+            <span className="hidden sm:inline">· там {othersInVoice.map((m) => m.name).slice(0, 2).join(', ')}</span>
+          </button>
         ) : (
           <button onClick={onJoinVoice} className="inline-flex h-10 items-center gap-2 rounded-xl bg-surface-2 px-3.5 text-sm font-semibold hover:bg-surface-3">
             <HeadphonesIcon size={18} /> Голос

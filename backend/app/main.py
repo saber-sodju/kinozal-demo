@@ -7,6 +7,9 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
+import hmac
 import json
 import re
 import os
@@ -32,6 +35,12 @@ DIST = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
 
 def ice_servers() -> list[dict]:
     servers = [{"urls": ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"]}]
+    # Свой TURN (coturn на Railway, TCP): временный логин/пароль по общему секрету (use-auth-secret).
+    turn_host, turn_secret = os.environ.get("TURN_HOST"), os.environ.get("TURN_SECRET")
+    if turn_host and turn_secret:
+        username = f"{int(time.time()) + 12 * 3600}:kinora"
+        credential = base64.b64encode(hmac.new(turn_secret.encode(), username.encode(), hashlib.sha1).digest()).decode()
+        servers.append({"urls": [f"turn:{turn_host}?transport=tcp"], "username": username, "credential": credential})
     turn = os.environ.get("KINOZAL_TURN_URL")
     if turn:
         servers.append({

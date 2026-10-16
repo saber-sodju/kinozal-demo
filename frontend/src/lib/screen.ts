@@ -12,6 +12,15 @@ interface Peer {
 
 
 
+
+function forceRelay(): boolean {
+  try {
+    return localStorage.getItem('kinora.forceRelay') === '1'
+  } catch {
+    return false
+  }
+}
+
 /**
  * Демонстрация вкладки (как в Discord): один участник показывает вкладку со звуком,
  * остальные получают её по WebRTC напрямую от него. Сигналинг — через сокет комнаты.
@@ -152,13 +161,20 @@ export class ScreenShare extends Emitter {
 
   private makePeer(id: string): Peer {
     this.closePeer(id)
-    const pc = new RTCPeerConnection({ iceServers: this.iceServers })
+    const pc = new RTCPeerConnection({
+      iceServers: this.iceServers,
+      // Для проверки посредника (TURN): localStorage['kinora.forceRelay'] = '1'
+      iceTransportPolicy: forceRelay() ? 'relay' : 'all',
+    })
     const peer: Peer = { pc, pending: [] }
     this.peers.set(id, peer)
     pc.onicecandidate = (e) => {
       if (e.candidate) this.client.send({ type: 'screen.signal', to: id, data: { candidate: e.candidate.toJSON() } })
     }
     pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'connected' || pc.connectionState === 'failed') {
+        this.client.send({ type: 'diag', what: 'screen', peer: id, state: pc.connectionState })
+      }
       if (!this.sharing && id === this.sharerId) {
         this.viewerState = pc.connectionState
         this.emit('change')

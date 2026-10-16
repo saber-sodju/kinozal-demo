@@ -13,6 +13,15 @@ type Signal = { sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit
 
 const SPEAK_THRESHOLD = 0.035
 
+
+function forceRelay(): boolean {
+  try {
+    return localStorage.getItem('kinora.forceRelay') === '1'
+  } catch {
+    return false
+  }
+}
+
 /**
  * Голосовой чат: P2P mesh через WebRTC, сигналинг идёт через WebSocket комнаты.
  * Подходит для 2–6 человек. Новичок сам звонит всем, кто уже в голосе.
@@ -218,7 +227,11 @@ export class VoiceManager extends Emitter {
   private createPeer(id: string): Peer {
     const existing = this.peers.get(id)
     if (existing) return existing
-    const pc = new RTCPeerConnection({ iceServers: this.iceServers })
+    const pc = new RTCPeerConnection({
+      iceServers: this.iceServers,
+      // Для проверки посредника (TURN): localStorage['kinora.forceRelay'] = '1'
+      iceTransportPolicy: forceRelay() ? 'relay' : 'all',
+    })
     const audio = new Audio()
     audio.autoplay = true
     const peer: Peer = { pc, audio, analyser: null, pending: [], volume: 1 }
@@ -232,12 +245,16 @@ export class VoiceManager extends Emitter {
       const [remote] = e.streams
       audio.srcObject = remote
       audio.play().catch(() => {
+        this.client.send({ type: 'diag', what: 'voice', peer: id, state: 'audio-blocked' })
         this.audioBlocked = true
         this.emit('change')
       })
       peer.analyser = this.makeAnalyser(remote)
     }
     pc.onconnectionstatechange = () => {
+      if (pc.connectionState === 'connected' || pc.connectionState === 'failed') {
+        this.client.send({ type: 'diag', what: 'voice', peer: id, state: pc.connectionState })
+      }
       if (pc.connectionState === 'failed') this.emit('peer-failed', id)
     }
     return peer

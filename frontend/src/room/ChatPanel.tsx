@@ -74,7 +74,7 @@ export function ChatPanel({
           )
         })}
       </div>
-      <form onSubmit={submit} className="border-t border-white/5 p-3">
+      <form onSubmit={submit} className="flex gap-2 border-t border-white/5 p-3">
         <input
           ref={inputRef}
           value={text}
@@ -82,8 +82,19 @@ export function ChatPanel({
           maxLength={500}
           placeholder="Написать в чат…"
           aria-label="Сообщение"
-          className="h-11 w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 text-sm outline-none transition placeholder:text-faint focus:border-accent/60 focus:ring-4 focus:ring-accent/15"
+          className="h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 text-sm outline-none transition placeholder:text-faint focus:border-accent/60 focus:ring-4 focus:ring-accent/15"
         />
+        <button
+          type="submit"
+          disabled={!text.trim()}
+          aria-label="Отправить"
+          title="Отправить"
+          className="btn-press bg-brand flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-[0_6px_20px_-8px_rgba(61,107,255,0.8)] transition disabled:opacity-40"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M3.4 20.4 21 12 3.4 3.6l-.01 6.53L15 12 3.39 13.87z" />
+          </svg>
+        </button>
       </form>
     </div>
   )

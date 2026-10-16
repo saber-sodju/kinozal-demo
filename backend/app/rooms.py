@@ -648,6 +648,10 @@ class RoomManager:
                 await room.member_action(member, msg)
             elif kind in ("voice.join", "voice.leave", "voice.state", "rtc.signal"):
                 await room.voice(member, msg)
+            elif kind == "diag":
+                # Клиент сообщает о проблемах соединения — видно в логах Railway.
+                print(f"diag room={room.slug} from={member.name}({member.id}) "
+                      f"{str(msg.get('what'))[:20]} peer={str(msg.get('peer'))[:20]} state={str(msg.get('state'))[:30]}", flush=True)
             elif kind == "profile.update":
                 await room.profile(member, msg)
             elif kind in ("screen.start", "screen.stop", "screen.signal"):

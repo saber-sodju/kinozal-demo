@@ -1,4 +1,4 @@
-export type SourceId = 'youtube' | 'vk' | 'telegram' | 'tgbot' | 'archive' | 'vimeo' | 'direct'
+export type SourceId = 'youtube' | 'vk' | 'rutube' | 'telegram' | 'tgbot' | 'archive' | 'vimeo' | 'direct'
 
 export interface Capabilities {
   can_seek: boolean

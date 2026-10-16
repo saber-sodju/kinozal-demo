@@ -17,6 +17,7 @@ import asyncio
 import os
 import re
 import secrets
+import urllib.parse
 from pathlib import Path
 
 from . import db
@@ -28,11 +29,22 @@ MEDIA_TTL_S = 30 * 60       # file_reference у Telegram живёт ограни
 TG_POST = re.compile(r"(?:https?://)?(?:t\.me|telegram\.me|telegram\.dog)/(?:s/)?([A-Za-z][A-Za-z0-9_]{3,})/(\d+)")
 
 HELP = (
-    "Привет! Я помогаю смотреть видео из Telegram вместе в Kinora.\n\n"
-    "Перешли мне видео из любого канала или чата (или отправь файл) — "
-    "я создам комнату и пришлю ссылку, которую можно отправить друзьям.\n\n"
-    "Ещё можно прислать ссылку на пост из публичного канала: t.me/канал/123"
+    "Привет! Я Kinora — помогаю смотреть кино вместе с друзьями.\n\n"
+    "🔎 Напиши название фильма, аниме или дорамы — найду на Rutube, YouTube и в других местах "
+    "и создам комнату одной кнопкой.\n\n"
+    "📤 Или перешли мне видео из любого канала или чата — тоже создам комнату.\n\n"
+    "Ссылку на комнату отправь друзьям: им не нужен Telegram, смотрят в браузере."
 )
+
+SOURCE_LABELS = {"rutube": "Rutube", "youtube": "YouTube", "archive": "Archive", "vk": "VK"}
+
+
+def _fmt_duration(seconds) -> str:
+    if not seconds:
+        return ""
+    seconds = int(seconds)
+    h, m = divmod(seconds // 60, 60)
+    return f"{h}:{m:02d}:{seconds % 60:02d}" if h else f"{m}:{seconds % 60:02d}"
 
 
 def public_base() -> str:
@@ -56,6 +68,7 @@ class TgBot:
         self._media: dict[str, tuple[object, float]] = {}
         self._inflight: dict[tuple[str, int], asyncio.Task] = {}
         self._thumbs: dict[str, bytes] = {}
+        self._picks: dict[str, tuple[str, str]] = {}  # ключ кнопки → (ссылка, название)
 
     @property
     def configured(self) -> bool:
@@ -84,6 +97,7 @@ class TgBot:
             self.client = None
             return
         self.client.add_event_handler(self._on_message, events.NewMessage(incoming=True, func=lambda e: e.is_private))
+        self.client.add_event_handler(self._on_button, events.CallbackQuery())
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         print(f"telegram bot: запущен как @{self.username}", flush=True)
 
@@ -180,8 +194,11 @@ class TgBot:
                 elif text.startswith("/"):
                     await event.reply(HELP, link_preview=False)
                     return
+                elif len(text) >= 2:
+                    await self._search(event, text)
+                    return
                 else:
-                    await event.reply("Пришли или перешли мне видео — или ссылку на пост с видео из публичного канала.")
+                    await event.reply("Напиши название фильма, аниме или дорамы — или перешли мне видео.")
                     return
             else:
                 token = self.register("private", msg.id, info, self.title_for(msg, info, "Видео из Telegram"))
@@ -201,6 +218,56 @@ class TgBot:
         except Exception as exc:
             print(f"telegram bot: ошибка обработки сообщения: {exc!r}", flush=True)
             await event.reply("Что-то пошло не так. Попробуй ещё раз чуть позже.")
+
+    # ---------- поиск ----------
+
+    async def _search(self, event, text: str) -> None:
+        from telethon import Button
+
+        from .search import search_everywhere
+
+        async with self.client.action(event.chat_id, "typing"):
+            data = await search_everywhere(text, "long")
+            results = data["results"] or (await search_everywhere(text, "all"))["results"]
+        if not results:
+            await event.reply("Ничего не нашёл 😕 Попробуй написать название по-другому — или перешли мне видео.")
+            return
+        rows = []
+        for r in results[:8]:
+            key = secrets.token_hex(4)
+            if len(self._picks) > 5000:
+                self._picks.pop(next(iter(self._picks)))
+            self._picks[key] = (r["url"], r["title"])
+            meta = " · ".join(x for x in [_fmt_duration(r.get("duration_s")), SOURCE_LABELS.get(r["source"], r["source"])] if x)
+            title = r["title"] if len(r["title"]) <= 40 else r["title"][:39] + "…"
+            rows.append([Button.inline(f"▶ {title} · {meta}", data=f"p:{key}".encode())])
+        rows.append([Button.url("🔎 Все результаты на сайте", f"{public_base()}/search?q={urllib.parse.quote(text)}")])
+        await event.reply(f"Нашёл по запросу «{text[:60]}». Выбери — и я создам комнату:", buttons=rows)
+
+    async def _on_button(self, event) -> None:
+        from . import rooms
+        from .sources import ResolveError, resolve_url
+
+        data = (event.data or b"").decode(errors="ignore")
+        if not data.startswith("p:"):
+            return
+        pick = self._picks.get(data[2:])
+        if not pick:
+            await event.answer("Поиск устарел — напиши название ещё раз.", alert=True)
+            return
+        url, title = pick
+        await event.answer("Создаю комнату…")
+        try:
+            media = await resolve_url(url)
+        except ResolveError as exc:
+            await event.respond(f"«{title[:60]}» не получится посмотреть вместе: {exc}\nВыбери другое видео из списка.")
+            return
+        slug = rooms.create_room_with_media(media, name=media["title"][:60])
+        await event.respond(
+            f"🎬 {media['title'][:80]}\n\nКомната готова:\n{public_base()}/r/{slug}\n\n"
+            "Отправь ссылку друзьям — видео пойдёт у всех синхронно.",
+            link_preview=False,
+        )
 
     # ---------- скачивание кусками ----------
 

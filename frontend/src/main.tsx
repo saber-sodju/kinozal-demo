@@ -13,6 +13,7 @@ import { NotFoundPage } from './pages/NotFound'
 import { ReportPage } from './pages/Report'
 import { RoomPage } from './pages/Room'
 import { SettingsPage } from './pages/Settings'
+import { SearchPage } from './pages/Search'
 import { SourcesPage } from './pages/Sources'
 import { TgLinkPage } from './pages/TgLink'
 
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
           <Route element={<Layout />}>
             <Route index element={<LandingPage />} />
             <Route path="catalog" element={<CatalogPage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="film/:id" element={<FilmPage />} />
             <Route path="new" element={<NewRoomPage />} />
             <Route path="settings" element={<SettingsPage />} />

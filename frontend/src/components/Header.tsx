@@ -1,4 +1,6 @@
-import { Link, NavLink } from 'react-router'
+import { useState, type FormEvent } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router'
+import { SearchIcon } from './Icons'
 import { useSession } from '../lib/useSession'
 import { Avatar } from './ui'
 
@@ -16,6 +18,27 @@ export function Logo({ className = '' }: { className?: string }) {
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'text-text' : 'text-muted hover:text-text'}`
 
+function HeaderSearch() {
+  const [q, setQ] = useState('')
+  const navigate = useNavigate()
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    navigate(q.trim() ? `/search?q=${encodeURIComponent(q.trim())}` : '/search')
+  }
+  return (
+    <form onSubmit={submit} className="relative hidden lg:block">
+      <SearchIcon size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Фильм, аниме, дорама…"
+        aria-label="Поиск"
+        className="h-10 w-64 rounded-xl border border-white/10 bg-white/[0.04] pl-9 pr-3 text-sm outline-none transition-all duration-300 placeholder:text-faint focus:w-80 focus:border-accent/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-accent/15"
+      />
+    </form>
+  )
+}
+
 export function Header() {
   const session = useSession()
   return (
@@ -23,11 +46,15 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:px-6">
         <Logo />
         <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Основная навигация">
+          <NavLink to="/search" className={navClass}>Поиск</NavLink>
           <NavLink to="/catalog" className={navClass}>Каталог</NavLink>
           <NavLink to="/sources" className={navClass}>Источники</NavLink>
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <NavLink to="/catalog" className={(s) => `${navClass(s)} md:hidden`}>Каталог</NavLink>
+          <HeaderSearch />
+          <Link to="/search" className="flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-white/10 hover:text-text md:hidden" aria-label="Поиск">
+            <SearchIcon size={19} />
+          </Link>
           <Link
             to="/new"
             className="btn-press btn-sheen glow-brand bg-brand hidden h-10 items-center rounded-xl px-4 text-sm font-semibold text-white hover:brightness-110 sm:inline-flex"

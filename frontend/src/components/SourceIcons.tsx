@@ -17,6 +17,14 @@ export function SourceTile({ id, size = 40 }: { id: string; size?: number }) {
           <path d="M10 14h4.2c.2 4.6 2.2 6.6 3.8 7v-7h3.9v4c1.6-.2 3.3-2 3.8-4H29c-.6 2.6-2.6 4.6-4 5.4 1.4.7 3.7 2.4 4.5 5.6h-4.3c-.7-2.1-2.4-3.8-4.6-4v4H20c-6.2 0-9.8-4.3-10-11z" fill="#fff" />
         </svg>
       )
+    case 'rutube':
+      return (
+        <svg {...common}>
+          <rect width="40" height="40" rx="11" fill="#100943" />
+          <path d="M12 12h11.5a5.5 5.5 0 0 1 1.7 10.7L29 28h-5l-3.4-5H17v5h-5zm5 4.2V19h6.2a1.4 1.4 0 0 0 0-2.8z" fill="#fff" />
+          <circle cx="29.5" cy="11.5" r="2.5" fill="#ED143B" />
+        </svg>
+      )
     case 'telegram':
     case 'tgbot':
       return (

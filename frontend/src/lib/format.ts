@@ -22,6 +22,7 @@ export function formatClock(ms: number): string {
 export const SOURCE_NAMES: Record<string, string> = {
   youtube: 'YouTube',
   vk: 'VK Видео',
+  rutube: 'Rutube',
   telegram: 'Telegram',
   tgbot: 'Telegram',
   archive: 'Internet Archive',

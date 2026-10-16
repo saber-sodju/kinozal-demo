@@ -1,5 +1,6 @@
-import { Link } from 'react-router'
-import { ChatIcon, CheckIcon, HeadphonesIcon, LinkIcon, PlayIcon, UsersIcon } from '../components/Icons'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router'
+import { ChatIcon, CheckIcon, HeadphonesIcon, LinkIcon, PlayIcon, SearchIcon, UsersIcon } from '../components/Icons'
 import { useCatalogSearch } from '../components/MediaPicker'
 import { Reveal } from '../components/Motion'
 import { Poster, PosterCard } from '../components/PosterCard'
@@ -13,6 +14,7 @@ const STEPS = [
 ]
 
 const SOURCES = [
+  { id: 'rutube', name: 'Rutube' },
   { id: 'youtube', name: 'YouTube' },
   { id: 'vk', name: 'VK Видео' },
   { id: 'telegram', name: 'Telegram' },
@@ -120,6 +122,35 @@ function PosterMarquee({ items }: { items: CatalogItem[] }) {
   )
 }
 
+function HeroSearch() {
+  const [q, setQ] = useState('')
+  const navigate = useNavigate()
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        navigate(`/search?q=${encodeURIComponent(q.trim())}`)
+      }}
+      className="group relative mt-8 max-w-xl"
+    >
+      <div className="absolute -inset-px rounded-2xl bg-[linear-gradient(90deg,rgba(56,200,255,0.6),rgba(61,107,255,0.6),rgba(168,85,247,0.6))] opacity-50 blur-[2px] transition group-focus-within:opacity-100" />
+      <div className="relative flex items-center rounded-2xl bg-surface/90 backdrop-blur-xl">
+        <SearchIcon size={20} className="pointer-events-none ml-4 shrink-0 text-faint" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Найди фильм, аниме или дораму…"
+          aria-label="Поиск фильмов, аниме и дорам"
+          className="h-14 min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-faint"
+        />
+        <button type="submit" className="btn-press bg-brand mr-2 h-10 shrink-0 rounded-xl px-4 text-sm font-semibold text-white hover:brightness-110">
+          Найти
+        </button>
+      </div>
+    </form>
+  )
+}
+
 export function LandingPage() {
   const { items } = useCatalogSearch('')
 
@@ -141,7 +172,10 @@ export function LandingPage() {
             <p className="pop-in mt-6 max-w-lg text-lg leading-relaxed text-muted" style={{ animationDelay: '120ms' }}>
               Открой ссылку — и через полминуты вы вместе смотрите фильм, слышите друг друга и смеётесь в одних и тех же местах.
             </p>
-            <div className="pop-in mt-9 flex flex-wrap gap-3" style={{ animationDelay: '180ms' }}>
+            <div className="pop-in" style={{ animationDelay: '160ms' }}>
+              <HeroSearch />
+            </div>
+            <div className="pop-in mt-6 flex flex-wrap gap-3" style={{ animationDelay: '200ms' }}>
               <Link
                 to="/new"
                 className="btn-press btn-sheen glow-brand bg-brand inline-flex h-13 items-center gap-2.5 rounded-2xl px-7 text-base font-semibold text-white hover:brightness-110"
@@ -156,7 +190,7 @@ export function LandingPage() {
               </Link>
             </div>
             <ul className="pop-in mt-10 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted" style={{ animationDelay: '240ms' }}>
-              {['Синхронно у всех', 'Голос и чат', 'YouTube, VK, Telegram'].map((t) => (
+              {['Синхронно у всех', 'Голос и чат', 'Rutube, YouTube, VK, Telegram'].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent/15 text-accent">
                     <CheckIcon size={13} />
@@ -253,7 +287,7 @@ export function LandingPage() {
             <div className="h-full rounded-3xl border border-white/[0.07] bg-surface/60 p-8 backdrop-blur-xl">
               <h3 className="font-display text-xl font-extrabold">Смотри откуда угодно</h3>
               <p className="mt-2 text-sm text-muted">Вставь ссылку — Kinora сама проверит, получится ли посмотреть её вместе.</p>
-              <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {SOURCES.map((s) => (
                   <li key={s.id} className="flex items-center gap-3 rounded-2xl bg-white/[0.04] p-3 transition hover:bg-white/[0.07]">
                     <SourceTile id={s.id} size={34} />

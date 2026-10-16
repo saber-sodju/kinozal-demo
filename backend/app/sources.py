@@ -259,6 +259,61 @@ class VKAdapter:
         }
 
 
+# ---------- Rutube ----------
+
+RUTUBE_ID = re.compile(r"rutube\.ru/(?:video|play/embed|shorts|video/private)/([0-9a-f]{32})")
+
+
+async def rutube_video(video_id: str) -> dict:
+    status, data = await fetch_json(f"https://rutube.ru/api/video/{video_id}/")
+    if status == 404 or not data:
+        raise ResolveError("Видео на Rutube не найдено или удалено.")
+    return data
+
+
+def rutube_media(d: dict) -> dict:
+    vid = d.get("id")
+    return {
+        "source": "rutube",
+        "external_id": vid,
+        "url": f"https://rutube.ru/play/embed/{vid}",
+        "page_url": d.get("video_url") or f"https://rutube.ru/video/{vid}/",
+        "title": d.get("title") or "Видео Rutube",
+        "subtitle": (d.get("author") or {}).get("name"),
+        "poster_url": d.get("thumbnail_url"),
+        "duration_s": d.get("duration"),
+    }
+
+
+class RutubeAdapter:
+    info = SourceInfo(
+        id="rutube",
+        name="Rutube",
+        examples=["https://rutube.ru/video/3641454715ffa6739d9ab81b4ae26666/"],
+        capabilities=Capabilities(can_set_rate=False, may_have_ads=True),
+        notes=[
+            "Плеер Rutube с управлением из кода — полная синхронизация.",
+            "Перед видео может быть реклама — у каждого своя, после неё плеер догонит остальных.",
+            "Платные, закрытые и 18+ видео не поддерживаются.",
+        ],
+    )
+
+    def match(self, url: str) -> bool:
+        return bool(RUTUBE_ID.search(url))
+
+    async def resolve(self, url: str) -> dict:
+        d = await rutube_video(RUTUBE_ID.search(url).group(1))
+        if d.get("is_deleted") or d.get("is_hidden"):
+            raise ResolveError("Видео на Rutube удалено или скрыто автором.")
+        if d.get("is_paid"):
+            raise ResolveError("Это платное видео Rutube — его нельзя смотреть вместе.")
+        if d.get("is_adult"):
+            raise ResolveError("Видео 18+ не поддерживаются.")
+        if d.get("is_livestream"):
+            raise ResolveError("Прямые трансляции пока не поддерживаются.")
+        return rutube_media(d)
+
+
 # ---------- Telegram (публичные каналы и группы) ----------
 
 TG_POST = re.compile(r"(?:https?://)?(?:t\.me|telegram\.me|telegram\.dog)/(?:s/)?([A-Za-z][A-Za-z0-9_]{3,})/(\d+)")
@@ -495,7 +550,7 @@ class DirectAdapter:
         }
 
 
-ADAPTERS = [YouTubeAdapter(), VKAdapter(), TelegramAdapter(), TgBotAdapter(), VimeoAdapter(), ArchiveAdapter(), DirectAdapter()]
+ADAPTERS = [YouTubeAdapter(), VKAdapter(), RutubeAdapter(), TelegramAdapter(), TgBotAdapter(), VimeoAdapter(), ArchiveAdapter(), DirectAdapter()]
 
 
 def source_infos() -> list[dict]:
@@ -523,6 +578,6 @@ async def resolve_url(url: str) -> dict:
         if adapter.match(url):
             return await adapter.resolve(url)
     raise ResolveError(
-        "Этот сайт не поддерживается. Подходят YouTube, VK Видео, Telegram (публичные каналы), Vimeo, "
+        "Этот сайт не поддерживается. Подходят YouTube, VK Видео, Rutube, Telegram (публичные каналы), Vimeo, "
         "Internet Archive и прямые ссылки на .mp4/.webm/.m3u8."
     )

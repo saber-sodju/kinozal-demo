@@ -264,7 +264,7 @@ export function PlayerStage(props: Props) {
       {media && (
         <div
           className={`absolute inset-x-0 bottom-0 z-30 px-3 pb-2 transition-opacity duration-300 sm:px-4 ${
-            media.source === 'vk' ? 'bg-black pt-3' : 'bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-10'
+            media.source === 'vk' || media.source === 'rutube' ? 'bg-black pt-3' : 'bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-10'
           } ${
             showControls ? 'opacity-100' : 'pointer-events-none opacity-0'
           }`}

@@ -4,6 +4,7 @@ import { SOURCE_NAMES, formatDuration } from '../lib/format'
 import type { Capabilities, CatalogItem, Media } from '../lib/types'
 import { AlertIcon, CheckIcon, SearchIcon } from './Icons'
 import { Poster, PosterCard } from './PosterCard'
+import { GlobalSearch } from './GlobalSearch'
 import { TgBotHint } from './TgBotHint'
 import { Badge, Button, Spinner, inputClass } from './ui'
 
@@ -122,14 +123,14 @@ function Check({ ok, warn, text }: { ok?: boolean; warn?: boolean; text: string 
 
 /** Выбор видео: каталог или ссылка. */
 export function MediaPicker({ value, onChange }: { value: Pick; onChange: (p: Pick) => void }) {
-  const [tab, setTab] = useState<'catalog' | 'link'>(value?.kind === 'url' ? 'link' : 'catalog')
+  const [tab, setTab] = useState<'search' | 'catalog' | 'link'>(value?.kind === 'url' ? 'link' : 'search')
   const [query, setQuery] = useState('')
   const { items } = useCatalogSearch(query)
 
   return (
     <div>
       <div className="mb-4 inline-flex rounded-xl bg-surface-2 p-1" role="tablist">
-        {(['catalog', 'link'] as const).map((t) => (
+        {(['search', 'catalog', 'link'] as const).map((t) => (
           <button
             key={t}
             role="tab"
@@ -137,12 +138,21 @@ export function MediaPicker({ value, onChange }: { value: Pick; onChange: (p: Pi
             onClick={() => setTab(t)}
             className={`rounded-lg px-4 py-1.5 text-sm font-medium transition ${tab === t ? 'bg-surface-3 text-text' : 'text-muted hover:text-text'}`}
           >
-            {t === 'catalog' ? 'Из каталога' : 'Вставить ссылку'}
+            {t === 'search' ? 'Поиск везде' : t === 'catalog' ? 'Каталог' : 'Вставить ссылку'}
           </button>
         ))}
       </div>
 
-      {tab === 'catalog' ? (
+      {tab === 'search' ? (
+        <div>
+          <GlobalSearch compact autoFocus onPicked={(media, r) => onChange({ kind: 'url', url: r.url, media })} />
+          {value?.kind === 'url' && (
+            <p className="mt-4 rounded-xl bg-gradient-soft px-4 py-3 text-sm">
+              Выбрано: <span className="font-semibold">{value.media.title}</span>
+            </p>
+          )}
+        </div>
+      ) : tab === 'catalog' ? (
         <div>
           <div className="relative mb-4">
             <SearchIcon size={18} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />

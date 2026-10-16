@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from . import db
 from .rooms import manager, new_slug
+from .search import search_everywhere
 from .tgbot import CHUNK, PREFETCH
 from .tgbot import bot as tgbot
 from .sources import ResolveError, capabilities_for, resolve_url, source_infos
@@ -123,6 +124,12 @@ def catalog_item(media_id: int):
     if not item:
         raise HTTPException(404, "Фильм не найден")
     return {"item": item, "capabilities": capabilities_for(item["source"])}
+
+
+@app.get("/api/search")
+async def search(request: Request, q: str = "", kind: str = "all"):
+    limit(request, "search", 40, 60)
+    return await search_everywhere(q[:100], kind if kind in ("all", "long", "short") else "all")
 
 
 @app.get("/api/sources")
